@@ -83,6 +83,19 @@
         .mini-copy-btn { background: #f1f5f9; color: #334155; border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s; min-width: 80px; text-align: center; }
         .mini-copy-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
         .mini-copy-btn.copied { background: #10b981 !important; color: white !important; border-color: #10b981 !important; }
+
+        /* 필수 항목 미입력 시 뜨는 복사 차단 경고창 */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal-card { background: #ffffff; border-radius: 14px; padding: 28px 28px 24px; width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+        .modal-icon { font-size: 32px; margin-bottom: 8px; line-height: 1; }
+        .modal-title { font-weight: 700; font-size: 16px; color: #1e293b; margin-bottom: 6px; }
+        .modal-desc { font-size: 13px; color: #64748b; margin-bottom: 14px; line-height: 1.5; }
+        .modal-list { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; display: block; }
+        .modal-list li { font-size: 13.5px; color: #ef4444; font-weight: 700; padding: 3px 0; }
+        .modal-list li::before { content: "• "; }
+        .modal-close-btn { background: var(--primary-color); color: #ffffff; border: none; padding: 10px 26px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .modal-close-btn:hover { background: var(--primary-hover); }
     </style>
 </head>
 <body>
@@ -191,6 +204,16 @@
             </div>
 
         </div>
+    </div>
+</div>
+
+<div id="copyGuardOverlay" class="modal-overlay" onclick="if (event.target === this) closeCopyGuardModal()">
+    <div class="modal-card">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-title">복사하기 전에 확인해주세요</div>
+        <div class="modal-desc">아래 항목을 먼저 입력해야 제목/본문을 복사할 수 있습니다.</div>
+        <ul id="copyGuardList" class="modal-list"></ul>
+        <button class="modal-close-btn" onclick="closeCopyGuardModal()">확인</button>
     </div>
 </div>
 
@@ -308,9 +331,33 @@
         document.getElementById('mailPreview').innerHTML = emailTemplate;
     }
 
+    // 사업장명 / 담당자 연락처가 모두 입력되어야 복사를 허용
+    function getMissingRequiredFields() {
+        const missing = [];
+        if (!document.getElementById('companyName').value.trim()) missing.push('사업장명');
+        if (!document.getElementById('contactInfo').value.trim()) missing.push('담당자 연락처');
+        return missing;
+    }
+
+    function showCopyGuardModal(missingFields) {
+        document.getElementById('copyGuardList').innerHTML = missingFields.map(f => `<li>${f}</li>`).join('');
+        document.getElementById('copyGuardOverlay').classList.add('show');
+    }
+
+    function closeCopyGuardModal() {
+        document.getElementById('copyGuardOverlay').classList.remove('show');
+    }
+
     function copyText(elementId, btnElement, originalText) {
+        const missing = getMissingRequiredFields();
+        if (missing.length > 0) {
+            renderMail(); // 경고 문구(사업장명/연락처) 표시 갱신
+            showCopyGuardModal(missing);
+            return;
+        }
+
         const container = document.getElementById(elementId);
-        
+
         let targetNode = container;
         if (elementId === 'mailSubject') {
             const tempDiv = document.createElement('div');
