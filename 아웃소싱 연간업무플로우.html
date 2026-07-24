@@ -330,7 +330,7 @@
         .task-num {
             font-size: 14px;
             font-weight: bold;
-            color: #0d47a1;
+            color: #64748b;
             flex-shrink: 0;
             min-width: 18px;
             text-align: center;
@@ -406,7 +406,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">15일</span>
@@ -435,7 +435,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">28일</span>
@@ -460,7 +460,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">10일</span>
@@ -493,7 +493,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">월중</span>
@@ -518,7 +518,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">10일</span>
@@ -554,7 +554,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">10일</span>
@@ -563,7 +563,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">🤝 소싱 업무</div>
+                            <div class="sector-title">🤝 소싱업무</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="task-num">①</span>
@@ -579,7 +579,7 @@
                     <div class="month-header"><span class="month-num">08월</span></div>
                     <div class="card-body">
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">5일</span>
@@ -608,7 +608,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">월중</span>
@@ -633,7 +633,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">20일</span>
@@ -662,7 +662,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">월중</span>
@@ -687,7 +687,7 @@
                             </ul>
                         </div>
                         <div class="sector-group">
-                            <div class="sector-title">📌 주요 일정</div>
+                            <div class="sector-title">📌 주요일정</div>
                             <ul class="task-list">
                                 <li class="task-item">
                                     <span class="date-badge">월중</span>
@@ -742,6 +742,18 @@
                 } else {
                     card.classList.add('other-month');
                 }
+            });
+
+            // 🔀 카드 내 섹션 순서 정렬: 주요일정 → 급여 → 소싱업무
+            const sectionOrder = { '주요일정': 1, '급여': 2, '소싱업무': 3 };
+            document.querySelectorAll('.card-body').forEach(function(body) {
+                const groups = Array.from(body.querySelectorAll('.sector-group'));
+                groups.sort(function(a, b) {
+                    const ka = a.querySelector('.sector-title').textContent.replace(/[^가-힣]/g, '');
+                    const kb = b.querySelector('.sector-title').textContent.replace(/[^가-힣]/g, '');
+                    return (sectionOrder[ka] || 99) - (sectionOrder[kb] || 99);
+                });
+                groups.forEach(function(g) { body.appendChild(g); });
             });
 
             // 🔢 급여 · 소싱 업무 섹션의 번호를 ①②③... 순서로 자동 매김
