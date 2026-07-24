@@ -95,9 +95,16 @@
         }
         .routine-tasks {
             display: flex;
-            gap: 15px;
-            margin-top: 8px;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
             flex-wrap: wrap;
+        }
+        .routine-tasks .task-desc {
+            font-size: 13px;
+            color: #334155;
+            font-weight: 500;
+            line-height: 1.45;
         }
         .routine-tag {
             background-color: #ffffff;
@@ -355,8 +362,8 @@
             <div class="portal-notice-box">
                 <strong>[매월 공통 루틴 업무]</strong> 아래 연간 특정 이슈 외에, 매월 기본으로 진행되는 법정 신고 및 정산 일정입니다.
                 <div class="routine-tasks">
-                    <span class="routine-tag">📌 매월 15일 : 근로자 4대보험 취득/상실</span>
-                    <span class="routine-tag">📌 매월 15일 : 일용직신고</span>
+                    <span class="date-badge">15일</span>
+                    <span class="task-desc">근로자 4대보험 취득/상실 · 일용직신고</span>
                 </div>
             </div>
 
