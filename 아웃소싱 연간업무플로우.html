@@ -810,6 +810,14 @@
             let viewMode = 'compact';        // 'compact'(3개월) | 'all'(전체)
             let windowStart = prevMonth;      // 보이는 3칸 중 맨 왼쪽 달 = 기본은 지난달
 
+            // 슬라이드가 끝나면 애니메이션 클래스 제거 → 당월 카드의 떠오름(-2px) 등 기본 상태 복원
+            allCards.forEach(function(c) {
+                c.addEventListener('animationend', function() {
+                    c.classList.remove('anim-next', 'anim-prev');
+                    c.style.animationDelay = '';
+                });
+            });
+
             function wrapMonth(m) { return ((m - 1) % 12 + 12) % 12 + 1; }
             function monthAt(start, k) { return wrapMonth(start + k); }
 
