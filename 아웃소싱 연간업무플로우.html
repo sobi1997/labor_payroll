@@ -130,7 +130,10 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: all 0.25s ease;
+            /* width/flex-basis는 전환에서 제외(모드 전환 시 폭이 애니메이션되며 깨지는 것 방지) */
+            transition: background-color 0.25s ease, border-color 0.25s ease,
+                        box-shadow 0.25s ease, opacity 0.25s ease,
+                        color 0.25s ease, transform 0.25s ease;
             position: relative;
         }
 
@@ -361,38 +364,34 @@
             padding: 12px 2px;   /* 카드 그림자 세로 잘림 방지 */
             margin: -12px -2px;
         }
+        /* 네모 박스 없이 〈 〉 글자 모양만 (카드 위에서도 보이도록 흰 외곽선 효과) */
         .nav-arrow {
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
             z-index: 5;
             width: 34px;
-            height: 50px;
-            border-radius: 11px;           /* 동그라미 대신 둥근 사각형 버튼 모양 */
-            border: 1.5px solid #bfdbfe;   /* 아래 pill 버튼과 톤 통일 */
-            background: rgba(255, 255, 255, 0.95);
-            -webkit-backdrop-filter: blur(2px);
-            backdrop-filter: blur(2px);
+            height: 60px;
+            border: none;
+            background: transparent;
+            padding: 0;
             color: #0d47a1;
-            font-size: 22px;
+            font-size: 32px;
             line-height: 1;
-            font-weight: bold;
+            font-weight: 900;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 3px 12px rgba(13, 71, 161, 0.16);
-            transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
+            text-shadow: 0 0 5px #fff, 0 0 5px #fff, 0 1px 3px rgba(255, 255, 255, 0.9);
+            transition: color 0.15s, transform 0.15s, opacity 0.15s;
         }
         /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치(간격 48px) */
         #navPrev { left: calc((100% - 96px) / 3 + 24px); }
         #navNext { left: calc((100% - 96px) / 3 * 2 + 72px); }
         .nav-arrow:hover {
-            background: #0d47a1;
-            color: #fff;
-            border-color: #0d47a1;
-            box-shadow: 0 6px 18px rgba(13, 71, 161, 0.32);
-            transform: translate(-50%, -50%) scale(1.08);
+            color: #08306b;
+            transform: translate(-50%, -50%) scale(1.25);
         }
         /* 전체 보기 모드에선 화살표 숨김 */
         .flow-wrapper.mode-all .nav-arrow { display: none; }
@@ -412,14 +411,11 @@
 
         /* 양끝에서 화살표 비활성화 */
         .nav-arrow:disabled {
-            opacity: 0.3;
+            opacity: 0.25;
             cursor: default;
-            box-shadow: none;
         }
         .nav-arrow:disabled:hover {
-            background: rgba(255, 255, 255, 0.95);
             color: #0d47a1;
-            border-color: #bfdbfe;
             transform: translate(-50%, -50%);
         }
 
@@ -864,9 +860,8 @@
             function positionTrack(animate) {
                 if (viewMode !== 'compact') return;
                 if (!animate) grid.style.transition = 'none';
-                // 카드 실제 렌더 폭을 재서 정확히 이동(패딩/반올림에 의한 어긋남 방지)
-                const cardEl = grid.querySelector('.month-card');
-                const cardW = cardEl.getBoundingClientRect().width;
+                // 카드 폭은 트랙(그리드) 내부폭에서 계산 → 카드 width 트랜지션에 영향받지 않아 정확
+                const cardW = (grid.clientWidth - GAP * 2) / 3;
                 const step = cardW + GAP;
                 grid.style.transform = 'translateX(' + (-(windowStart - 1) * step) + 'px)';
                 // 화살표도 카드와 동일한 측정값으로 두 틈 중앙에 배치 → 좌우 완전 대칭(데칼코마니)
