@@ -372,34 +372,35 @@
         .nav-arrow {
             position: absolute;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translate(-50%, -50%);
             z-index: 5;
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 1px solid #dbe4ef;
-            background: rgba(255, 255, 255, 0.92);
+            border: 1.5px solid #bfdbfe;   /* 아래 pill 버튼과 톤 통일 */
+            background: rgba(255, 255, 255, 0.95);
             -webkit-backdrop-filter: blur(2px);
             backdrop-filter: blur(2px);
             color: #0d47a1;
-            font-size: 24px;
+            font-size: 23px;
             line-height: 1;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 14px rgba(13, 71, 161, 0.18);
+            box-shadow: 0 3px 12px rgba(13, 71, 161, 0.16);
             transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
         }
-        #navPrev { left: 6px; }
-        #navNext { right: 6px; }
+        /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치 */
+        #navPrev { left: calc((100% - 40px) / 3 + 10px); }
+        #navNext { left: calc((100% - 40px) / 3 * 2 + 30px); }
         .nav-arrow:hover {
             background: #0d47a1;
             color: #fff;
             border-color: #0d47a1;
             box-shadow: 0 6px 18px rgba(13, 71, 161, 0.32);
-            transform: translateY(-50%) scale(1.08);
+            transform: translate(-50%, -50%) scale(1.08);
         }
         /* 전체 보기 모드에선 화살표 숨김 */
         .flow-wrapper.mode-all .nav-arrow { display: none; }
@@ -424,10 +425,10 @@
             box-shadow: none;
         }
         .nav-arrow:disabled:hover {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             color: #0d47a1;
-            border-color: #dbe4ef;
-            transform: translateY(-50%);
+            border-color: #bfdbfe;
+            transform: translate(-50%, -50%);
         }
 
         .view-toggle-wrap {
