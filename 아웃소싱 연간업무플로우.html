@@ -364,9 +364,13 @@
             align-items: center;
             gap: 12px;
         }
-        .flow-wrapper .flow-grid {
+        /* 🪟 3개월만 보이는 창(뷰포트) */
+        .flow-viewport {
             flex: 1;
             min-width: 0;
+            overflow: hidden;
+            padding: 12px 2px;   /* 카드 그림자 세로 잘림 방지 */
+            margin: -12px -2px;
         }
         .nav-arrow {
             flex-shrink: 0;
@@ -395,17 +399,31 @@
         /* 전체 보기 모드에선 화살표 숨김 */
         .flow-wrapper.mode-all .nav-arrow { display: none; }
 
-        /* 🎬 슉슉 슬라이드 모션 */
-        @keyframes slideFromRight {
-            from { opacity: 0; transform: translateX(60px); }
-            to   { opacity: 1; transform: translateX(0); }
+        /* 🎠 3개월 캐러셀: 창 안에서 띠(track)가 통째로 부드럽게 미끄러짐 */
+        .flow-wrapper:not(.mode-all) .flow-grid {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 20px;
+            transform: translateX(0);
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
         }
-        @keyframes slideFromLeft {
-            from { opacity: 0; transform: translateX(-60px); }
-            to   { opacity: 1; transform: translateX(0); }
+        .flow-wrapper:not(.mode-all) .flow-grid > .month-card {
+            flex: 0 0 calc((100% - 40px) / 3);   /* 항상 3칸 폭 */
         }
-        .month-card.anim-next { animation: slideFromRight 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .month-card.anim-prev { animation: slideFromLeft 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+        /* 양끝에서 화살표 비활성화 */
+        .nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: default;
+            box-shadow: none;
+        }
+        .nav-arrow:disabled:hover {
+            background: #ffffff;
+            color: #0d47a1;
+            border-color: #cbd5e1;
+            transform: none;
+        }
 
         .view-toggle-wrap {
             text-align: center;
@@ -471,7 +489,8 @@
             <!-- 🗓️ 1월~12월 연간 업무 그리드 (화살표로 3개월씩 이동) -->
             <div class="flow-wrapper" id="flowWrapper">
                 <button class="nav-arrow" id="navPrev" aria-label="이전 달 보기">‹</button>
-                <div class="flow-grid">
+                <div class="flow-viewport" id="flowViewport">
+                <div class="flow-grid" id="flowGrid">
 
                 <!-- 01월 -->
                 <div class="month-card" data-month="1">
@@ -726,6 +745,7 @@
                 </div>
 
                 </div>
+                </div>
                 <button class="nav-arrow" id="navNext" aria-label="다음 달 보기">›</button>
             </div>
 
@@ -807,71 +827,66 @@
             const navNext = document.getElementById('navNext');
             const allCards = document.querySelectorAll('.month-card');
 
+            const viewport = document.getElementById('flowViewport');
+            const grid = document.getElementById('flowGrid');
+            const GAP = 20; // .flow-grid gap(px)와 동일
+
             let viewMode = 'compact';        // 'compact'(3개월) | 'all'(전체)
-            let windowStart = prevMonth;      // 보이는 3칸 중 맨 왼쪽 달 = 기본은 지난달
+            function clampStart(s) { return Math.min(10, Math.max(1, s)); }
+            // 기본: 당월이 항상 보이도록 [지난달·당월·다음달] 중앙 정렬 후 양끝 보정
+            let windowStart = clampStart(currentMonth - 1);
 
-            // 슬라이드가 끝나면 애니메이션 클래스 제거 → 당월 카드의 떠오름(-2px) 등 기본 상태 복원
-            allCards.forEach(function(c) {
-                c.addEventListener('animationend', function() {
-                    c.classList.remove('anim-next', 'anim-prev');
-                    c.style.animationDelay = '';
-                });
-            });
+            // 띠(track)를 windowStart 위치로 이동. animate=false면 즉시(전환 애니 없이) 배치
+            function positionTrack(animate) {
+                if (viewMode !== 'compact') return;
+                if (!animate) grid.style.transition = 'none';
+                const vw = viewport.clientWidth;
+                const cardW = (vw - GAP * 2) / 3;
+                const step = cardW + GAP;
+                grid.style.transform = 'translateX(' + (-(windowStart - 1) * step) + 'px)';
+                if (!animate) { void grid.offsetWidth; grid.style.transition = ''; }
+            }
 
-            function wrapMonth(m) { return ((m - 1) % 12 + 12) % 12 + 1; }
-            function monthAt(start, k) { return wrapMonth(start + k); }
+            function updateRange() {
+                const v = [windowStart, windowStart + 1, windowStart + 2];
+                rangeHint.textContent = v.map(function(m) { return m + '월'; }).join('  ·  ');
+                navPrev.disabled = windowStart <= 1;
+                navNext.disabled = windowStart >= 10;
+            }
 
-            function render(direction) {
+            function render() {
                 if (viewMode === 'all') {
                     wrapper.classList.add('mode-all');
                     rangeHint.style.display = 'none';
                     toggleBtn.textContent = '🔙 3개월 보기로 돌아가기';
-                    allCards.forEach(function(c) {
-                        c.style.display = '';
-                        c.style.order = '';
-                        c.style.animationDelay = '';
-                        c.classList.remove('anim-next', 'anim-prev');
-                    });
+                    grid.style.transition = '';
+                    grid.style.transform = '';
                 } else {
                     wrapper.classList.remove('mode-all');
                     rangeHint.style.display = '';
                     toggleBtn.textContent = '📅 전체 월 보기';
-                    const visible = [monthAt(windowStart, 0), monthAt(windowStart, 1), monthAt(windowStart, 2)];
-                    allCards.forEach(function(c) {
-                        const m = parseInt(c.getAttribute('data-month'), 10);
-                        const idx = visible.indexOf(m);
-                        c.classList.remove('anim-next', 'anim-prev');
-                        if (idx === -1) {
-                            c.style.display = 'none';
-                            c.style.order = '';
-                            c.style.animationDelay = '';
-                        } else {
-                            c.style.display = '';
-                            c.style.order = idx;
-                            if (direction) {
-                                c.style.animationDelay = (idx * 60) + 'ms'; // 슉·슉·슉 살짝 시차
-                                void c.offsetWidth;                          // 애니메이션 재시작 트리거
-                                c.classList.add(direction === 'next' ? 'anim-next' : 'anim-prev');
-                            } else {
-                                c.style.animationDelay = '';
-                            }
-                        }
-                    });
-                    rangeHint.textContent = visible.map(function(m) { return m + '월'; }).join('  ·  ');
+                    updateRange();
+                    positionTrack(false); // 초기/모드 전환 시엔 애니메이션 없이 위치만
                 }
             }
 
-            navPrev.addEventListener('click', function() { windowStart = wrapMonth(windowStart - 1); render('prev'); });
-            navNext.addEventListener('click', function() { windowStart = wrapMonth(windowStart + 1); render('next'); });
+            navPrev.addEventListener('click', function() {
+                if (windowStart > 1) { windowStart--; updateRange(); positionTrack(true); }
+            });
+            navNext.addEventListener('click', function() {
+                if (windowStart < 10) { windowStart++; updateRange(); positionTrack(true); }
+            });
             toggleBtn.addEventListener('click', function() {
                 if (viewMode === 'compact') {
                     viewMode = 'all';
                 } else {
                     viewMode = 'compact';
-                    windowStart = prevMonth; // 3개월 보기로 돌아오면 다시 지난달·당월·다음달로 리셋
+                    windowStart = clampStart(currentMonth - 1); // 돌아오면 당월 중심으로 리셋
                 }
                 render();
             });
+            // 창 크기 바뀌면 띠 위치 재계산(애니메이션 없이)
+            window.addEventListener('resize', function() { positionTrack(false); });
 
             render();
         });
