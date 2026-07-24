@@ -366,15 +366,15 @@
             top: 50%;
             transform: translate(-50%, -50%);
             z-index: 5;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 34px;
+            height: 50px;
+            border-radius: 11px;           /* 동그라미 대신 둥근 사각형 버튼 모양 */
             border: 1.5px solid #bfdbfe;   /* 아래 pill 버튼과 톤 통일 */
             background: rgba(255, 255, 255, 0.95);
             -webkit-backdrop-filter: blur(2px);
             backdrop-filter: blur(2px);
             color: #0d47a1;
-            font-size: 23px;
+            font-size: 22px;
             line-height: 1;
             font-weight: bold;
             cursor: pointer;
@@ -869,6 +869,9 @@
                 const cardW = cardEl.getBoundingClientRect().width;
                 const step = cardW + GAP;
                 grid.style.transform = 'translateX(' + (-(windowStart - 1) * step) + 'px)';
+                // 화살표도 카드와 동일한 측정값으로 두 틈 중앙에 배치 → 좌우 완전 대칭(데칼코마니)
+                navPrev.style.left = (cardW + GAP / 2) + 'px';
+                navNext.style.left = (2 * cardW + GAP + GAP / 2) + 'px';
                 if (!animate) { void grid.offsetWidth; grid.style.transition = ''; }
             }
 
