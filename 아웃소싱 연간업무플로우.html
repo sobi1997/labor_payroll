@@ -360,41 +360,46 @@
             letter-spacing: 0.5px;
         }
         .flow-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            position: relative;
         }
         /* 🪟 3개월만 보이는 창(뷰포트) */
         .flow-viewport {
-            flex: 1;
-            min-width: 0;
+            width: 100%;
             overflow: hidden;
             padding: 12px 2px;   /* 카드 그림자 세로 잘림 방지 */
             margin: -12px -2px;
         }
         .nav-arrow {
-            flex-shrink: 0;
-            width: 44px;
-            height: 44px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            border: 1px solid #cbd5e1;
-            background: #ffffff;
+            border: 1px solid #dbe4ef;
+            background: rgba(255, 255, 255, 0.92);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
             color: #0d47a1;
-            font-size: 26px;
+            font-size: 24px;
             line-height: 1;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            transition: all 0.15s;
+            box-shadow: 0 4px 14px rgba(13, 71, 161, 0.18);
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
         }
+        #navPrev { left: 6px; }
+        #navNext { right: 6px; }
         .nav-arrow:hover {
             background: #0d47a1;
             color: #fff;
             border-color: #0d47a1;
-            transform: scale(1.05);
+            box-shadow: 0 6px 18px rgba(13, 71, 161, 0.32);
+            transform: translateY(-50%) scale(1.08);
         }
         /* 전체 보기 모드에선 화살표 숨김 */
         .flow-wrapper.mode-all .nav-arrow { display: none; }
@@ -419,30 +424,48 @@
             box-shadow: none;
         }
         .nav-arrow:disabled:hover {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.92);
             color: #0d47a1;
-            border-color: #cbd5e1;
-            transform: none;
+            border-color: #dbe4ef;
+            transform: translateY(-50%);
         }
 
         .view-toggle-wrap {
             text-align: center;
-            margin-top: 22px;
+            margin-top: 26px;
         }
         .view-toggle-btn {
-            background: #0d47a1;
-            color: #fff;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #0d47a1;
+            border: 1.5px solid #bfdbfe;
+            padding: 10px 26px;
+            border-radius: 999px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            letter-spacing: -0.3px;
-            box-shadow: 0 3px 10px rgba(13,71,161,0.25);
-            transition: all 0.15s;
+            letter-spacing: -0.2px;
+            box-shadow: 0 2px 10px rgba(13, 71, 161, 0.10);
+            transition: all 0.18s;
         }
-        .view-toggle-btn:hover { background: #08306b; transform: translateY(-1px); }
+        .view-toggle-btn::before {
+            content: "▦";
+            font-size: 15px;
+            line-height: 1;
+        }
+        .view-toggle-btn.mode-back::before {
+            content: "‹";
+            font-size: 20px;
+        }
+        .view-toggle-btn:hover {
+            background: #0d47a1;
+            color: #fff;
+            border-color: #0d47a1;
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.28);
+            transform: translateY(-1px);
+        }
 
         /* 📱 반응형 대응 */
         @media (max-width: 1024px) {
@@ -751,7 +774,7 @@
 
             <!-- 🔘 전체월 보기 / 3개월 보기 전환 -->
             <div class="view-toggle-wrap">
-                <button id="toggleViewBtn" class="view-toggle-btn">📅 전체 월 보기</button>
+                <button id="toggleViewBtn" class="view-toggle-btn">전체 월</button>
             </div>
 
             <!-- 📄 하단 제작자 표기 -->
@@ -771,32 +794,20 @@
             const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
             const monthCards = document.querySelectorAll('.month-card');
-            monthCards.forEach(function(card) {
-                const cardMonth = parseInt(card.getAttribute('data-month'), 10);
-                const header = card.querySelector('.month-header');
 
-                if (cardMonth === currentMonth) {
-                    card.classList.add('current-month');
-                    const badge = document.createElement('span');
-                    badge.className = 'status-badge badge-current';
-                    badge.textContent = '당월';
-                    header.appendChild(badge);
-                } else if (cardMonth === prevMonth) {
-                    card.classList.add('prev-month');
-                    const badge = document.createElement('span');
-                    badge.className = 'status-badge badge-prev';
-                    badge.textContent = '지난달';
-                    header.appendChild(badge);
-                } else if (cardMonth === nextMonth) {
-                    card.classList.add('next-month');
-                    const badge = document.createElement('span');
-                    badge.className = 'status-badge badge-next';
-                    badge.textContent = '다음달';
-                    header.appendChild(badge);
-                } else {
-                    card.classList.add('other-month');
-                }
-            });
+            // 카드에 상태(색+배지) 부여/초기화 헬퍼
+            function clearCardStyle(card) {
+                card.classList.remove('current-month', 'prev-month', 'next-month', 'other-month');
+                const old = card.querySelector('.status-badge');
+                if (old) old.remove();
+            }
+            function setCardStyle(card, cls, badgeCls, label) {
+                card.classList.add(cls);
+                const badge = document.createElement('span');
+                badge.className = 'status-badge ' + badgeCls;
+                badge.textContent = label;
+                card.querySelector('.month-header').appendChild(badge);
+            }
 
             // 🔀 카드 내 섹션 순서 정렬: 주요일정 → 급여 → 소싱업무
             const sectionOrder = { '주요일정': 1, '급여': 2, '소싱업무': 3 };
@@ -836,6 +847,30 @@
             // 기본: 당월이 항상 보이도록 [지난달·당월·다음달] 중앙 정렬 후 양끝 보정
             let windowStart = clampStart(currentMonth - 1);
 
+            // 전체 보기: 실제 날짜 기준(당월/지난달/다음달만 강조, 나머지 연하게)
+            function styleAll() {
+                monthCards.forEach(function(card) {
+                    clearCardStyle(card);
+                    const m = parseInt(card.getAttribute('data-month'), 10);
+                    if (m === currentMonth) setCardStyle(card, 'current-month', 'badge-current', '당월');
+                    else if (m === prevMonth) setCardStyle(card, 'prev-month', 'badge-prev', '지난달');
+                    else if (m === nextMonth) setCardStyle(card, 'next-month', 'badge-next', '다음달');
+                    else card.classList.add('other-month');
+                });
+            }
+            // 3개월 캐러셀: 위치 기준(왼=지난달·가운데=당월·오른=다음달) → 어떤 달이든 그 색으로
+            function styleCompact() {
+                monthCards.forEach(function(card) {
+                    clearCardStyle(card);
+                    const m = parseInt(card.getAttribute('data-month'), 10);
+                    const slot = m - windowStart; // 0=왼, 1=가운데, 2=오른
+                    if (slot === 0) setCardStyle(card, 'prev-month', 'badge-prev', '지난달');
+                    else if (slot === 1) setCardStyle(card, 'current-month', 'badge-current', '당월');
+                    else if (slot === 2) setCardStyle(card, 'next-month', 'badge-next', '다음달');
+                    else card.classList.add('other-month'); // 화면 밖(잘려서 안 보임)
+                });
+            }
+
             // 띠(track)를 windowStart 위치로 이동. animate=false면 즉시(전환 애니 없이) 배치
             function positionTrack(animate) {
                 if (viewMode !== 'compact') return;
@@ -858,23 +893,27 @@
                 if (viewMode === 'all') {
                     wrapper.classList.add('mode-all');
                     rangeHint.style.display = 'none';
-                    toggleBtn.textContent = '🔙 3개월 보기로 돌아가기';
+                    toggleBtn.textContent = '돌아가기';
+                    toggleBtn.classList.add('mode-back');
                     grid.style.transition = '';
                     grid.style.transform = '';
+                    styleAll();
                 } else {
                     wrapper.classList.remove('mode-all');
                     rangeHint.style.display = '';
-                    toggleBtn.textContent = '📅 전체 월 보기';
+                    toggleBtn.textContent = '전체 월';
+                    toggleBtn.classList.remove('mode-back');
+                    styleCompact();
                     updateRange();
                     positionTrack(false); // 초기/모드 전환 시엔 애니메이션 없이 위치만
                 }
             }
 
             navPrev.addEventListener('click', function() {
-                if (windowStart > 1) { windowStart--; updateRange(); positionTrack(true); }
+                if (windowStart > 1) { windowStart--; styleCompact(); updateRange(); positionTrack(true); }
             });
             navNext.addEventListener('click', function() {
-                if (windowStart < 10) { windowStart++; updateRange(); positionTrack(true); }
+                if (windowStart < 10) { windowStart++; styleCompact(); updateRange(); positionTrack(true); }
             });
             toggleBtn.addEventListener('click', function() {
                 if (viewMode === 'compact') {
