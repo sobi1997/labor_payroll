@@ -386,9 +386,9 @@
             text-shadow: 0 0 5px #fff, 0 0 5px #fff, 0 1px 3px rgba(255, 255, 255, 0.9);
             transition: color 0.15s, transform 0.15s, opacity 0.15s;
         }
-        /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치(간격 48px) */
-        #navPrev { left: calc((100% - 96px) / 3 + 24px); }
-        #navNext { left: calc((100% - 96px) / 3 * 2 + 72px); }
+        /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치(간격 20px) */
+        #navPrev { left: calc((100% - 40px) / 3 + 10px); }
+        #navNext { left: calc((100% - 40px) / 3 * 2 + 30px); }
         .nav-arrow:hover {
             color: #08306b;
             transform: translate(-50%, -50%) scale(1.25);
@@ -400,13 +400,13 @@
         .flow-wrapper:not(.mode-all) .flow-grid {
             display: flex;
             flex-wrap: nowrap;
-            gap: 48px;   /* 화살표가 카드 사이 틈에 깔끔히 들어가도록 넓힘 */
+            gap: 20px;   /* 전체월(그리드)과 동일 → 카드 폭·글자 줄바꿈이 완전히 같아짐 */
             transform: translateX(0);
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
         }
         .flow-wrapper:not(.mode-all) .flow-grid > .month-card {
-            flex: 0 0 calc((100% - 96px) / 3);   /* 항상 3칸 폭(간격 48px×2) */
+            flex: 0 0 calc((100% - 40px) / 3);   /* 전체월 카드와 동일 폭(간격 20px×2) */
         }
 
         /* 양끝에서 화살표 비활성화 */
@@ -825,7 +825,7 @@
 
             const viewport = document.getElementById('flowViewport');
             const grid = document.getElementById('flowGrid');
-            const GAP = 48; // 3개월 캐러셀 카드 사이 간격(px)
+            const GAP = 20; // 3개월 캐러셀 카드 사이 간격(px) = 전체월과 동일
 
             let viewMode = 'compact';        // 'compact'(3개월) | 'all'(전체)
             function clampStart(s) { return Math.min(10, Math.max(1, s)); }
