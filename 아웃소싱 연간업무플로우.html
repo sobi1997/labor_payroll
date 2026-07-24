@@ -350,6 +350,82 @@
             font-weight: normal;
         }
 
+        /* 🎚️ 3개월 보기 캐러셀 + 전체 보기 컨트롤 */
+        .range-hint {
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #0d47a1;
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
+        }
+        .flow-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .flow-wrapper .flow-grid {
+            flex: 1;
+            min-width: 0;
+        }
+        .nav-arrow {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0d47a1;
+            font-size: 26px;
+            line-height: 1;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: all 0.15s;
+        }
+        .nav-arrow:hover {
+            background: #0d47a1;
+            color: #fff;
+            border-color: #0d47a1;
+            transform: scale(1.05);
+        }
+        /* 전체 보기 모드에선 화살표 숨김 */
+        .flow-wrapper.mode-all .nav-arrow { display: none; }
+
+        /* 🎬 슉슉 슬라이드 모션 */
+        @keyframes slideFromRight {
+            from { opacity: 0; transform: translateX(60px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideFromLeft {
+            from { opacity: 0; transform: translateX(-60px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .month-card.anim-next { animation: slideFromRight 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .month-card.anim-prev { animation: slideFromLeft 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+        .view-toggle-wrap {
+            text-align: center;
+            margin-top: 22px;
+        }
+        .view-toggle-btn {
+            background: #0d47a1;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: -0.3px;
+            box-shadow: 0 3px 10px rgba(13,71,161,0.25);
+            transition: all 0.15s;
+        }
+        .view-toggle-btn:hover { background: #08306b; transform: translateY(-1px); }
+
         /* 📱 반응형 대응 */
         @media (max-width: 1024px) {
             .flow-grid { grid-template-columns: repeat(2, 1fr); }
@@ -389,8 +465,13 @@
                 </div>
             </div>
 
-            <!-- 🗓️ 1월~12월 연간 업무 그리드 -->
-            <div class="flow-grid">
+            <!-- 🎚️ 3개월 보기 범위 안내 -->
+            <div class="range-hint" id="rangeHint"></div>
+
+            <!-- 🗓️ 1월~12월 연간 업무 그리드 (화살표로 3개월씩 이동) -->
+            <div class="flow-wrapper" id="flowWrapper">
+                <button class="nav-arrow" id="navPrev" aria-label="이전 달 보기">‹</button>
+                <div class="flow-grid">
 
                 <!-- 01월 -->
                 <div class="month-card" data-month="1">
@@ -644,6 +725,13 @@
                     </div>
                 </div>
 
+                </div>
+                <button class="nav-arrow" id="navNext" aria-label="다음 달 보기">›</button>
+            </div>
+
+            <!-- 🔘 전체월 보기 / 3개월 보기 전환 -->
+            <div class="view-toggle-wrap">
+                <button id="toggleViewBtn" class="view-toggle-btn">📅 전체 월 보기</button>
             </div>
 
             <!-- 📄 하단 제작자 표기 -->
@@ -710,6 +798,74 @@
                     el.textContent = circleNums[idx] || (idx + 1) + '.';
                 });
             });
+
+            // 🎚️ 3개월 캐러셀(지난달·당월·다음달) + 전체 12개월 보기 토글
+            const wrapper = document.getElementById('flowWrapper');
+            const rangeHint = document.getElementById('rangeHint');
+            const toggleBtn = document.getElementById('toggleViewBtn');
+            const navPrev = document.getElementById('navPrev');
+            const navNext = document.getElementById('navNext');
+            const allCards = document.querySelectorAll('.month-card');
+
+            let viewMode = 'compact';        // 'compact'(3개월) | 'all'(전체)
+            let windowStart = prevMonth;      // 보이는 3칸 중 맨 왼쪽 달 = 기본은 지난달
+
+            function wrapMonth(m) { return ((m - 1) % 12 + 12) % 12 + 1; }
+            function monthAt(start, k) { return wrapMonth(start + k); }
+
+            function render(direction) {
+                if (viewMode === 'all') {
+                    wrapper.classList.add('mode-all');
+                    rangeHint.style.display = 'none';
+                    toggleBtn.textContent = '🔙 3개월 보기로 돌아가기';
+                    allCards.forEach(function(c) {
+                        c.style.display = '';
+                        c.style.order = '';
+                        c.style.animationDelay = '';
+                        c.classList.remove('anim-next', 'anim-prev');
+                    });
+                } else {
+                    wrapper.classList.remove('mode-all');
+                    rangeHint.style.display = '';
+                    toggleBtn.textContent = '📅 전체 월 보기';
+                    const visible = [monthAt(windowStart, 0), monthAt(windowStart, 1), monthAt(windowStart, 2)];
+                    allCards.forEach(function(c) {
+                        const m = parseInt(c.getAttribute('data-month'), 10);
+                        const idx = visible.indexOf(m);
+                        c.classList.remove('anim-next', 'anim-prev');
+                        if (idx === -1) {
+                            c.style.display = 'none';
+                            c.style.order = '';
+                            c.style.animationDelay = '';
+                        } else {
+                            c.style.display = '';
+                            c.style.order = idx;
+                            if (direction) {
+                                c.style.animationDelay = (idx * 60) + 'ms'; // 슉·슉·슉 살짝 시차
+                                void c.offsetWidth;                          // 애니메이션 재시작 트리거
+                                c.classList.add(direction === 'next' ? 'anim-next' : 'anim-prev');
+                            } else {
+                                c.style.animationDelay = '';
+                            }
+                        }
+                    });
+                    rangeHint.textContent = visible.map(function(m) { return m + '월'; }).join('  ·  ');
+                }
+            }
+
+            navPrev.addEventListener('click', function() { windowStart = wrapMonth(windowStart - 1); render('prev'); });
+            navNext.addEventListener('click', function() { windowStart = wrapMonth(windowStart + 1); render('next'); });
+            toggleBtn.addEventListener('click', function() {
+                if (viewMode === 'compact') {
+                    viewMode = 'all';
+                } else {
+                    viewMode = 'compact';
+                    windowStart = prevMonth; // 3개월 보기로 돌아오면 다시 지난달·당월·다음달로 리셋
+                }
+                render();
+            });
+
+            render();
         });
     </script>
 
