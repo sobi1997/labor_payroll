@@ -351,14 +351,6 @@
         }
 
         /* 🎚️ 3개월 보기 캐러셀 + 전체 보기 컨트롤 */
-        .range-hint {
-            text-align: center;
-            font-size: 13px;
-            font-weight: bold;
-            color: #0d47a1;
-            margin-bottom: 14px;
-            letter-spacing: 0.5px;
-        }
         .flow-wrapper {
             position: relative;
         }
@@ -392,9 +384,9 @@
             box-shadow: 0 3px 12px rgba(13, 71, 161, 0.16);
             transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
         }
-        /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치 */
-        #navPrev { left: calc((100% - 40px) / 3 + 10px); }
-        #navNext { left: calc((100% - 40px) / 3 * 2 + 30px); }
+        /* 지난달 〈 당월 〉 다음달 : 화살표를 카드 사이 틈 중앙에 배치(간격 48px) */
+        #navPrev { left: calc((100% - 96px) / 3 + 24px); }
+        #navNext { left: calc((100% - 96px) / 3 * 2 + 72px); }
         .nav-arrow:hover {
             background: #0d47a1;
             color: #fff;
@@ -409,13 +401,13 @@
         .flow-wrapper:not(.mode-all) .flow-grid {
             display: flex;
             flex-wrap: nowrap;
-            gap: 20px;
+            gap: 48px;   /* 화살표가 카드 사이 틈에 깔끔히 들어가도록 넓힘 */
             transform: translateX(0);
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
         }
         .flow-wrapper:not(.mode-all) .flow-grid > .month-card {
-            flex: 0 0 calc((100% - 40px) / 3);   /* 항상 3칸 폭 */
+            flex: 0 0 calc((100% - 96px) / 3);   /* 항상 3칸 폭(간격 48px×2) */
         }
 
         /* 양끝에서 화살표 비활성화 */
@@ -506,9 +498,6 @@
                     <span class="task-desc">근로자 4대보험 취득/상실 · 일용직신고</span>
                 </div>
             </div>
-
-            <!-- 🎚️ 3개월 보기 범위 안내 -->
-            <div class="range-hint" id="rangeHint"></div>
 
             <!-- 🗓️ 1월~12월 연간 업무 그리드 (화살표로 3개월씩 이동) -->
             <div class="flow-wrapper" id="flowWrapper">
@@ -833,7 +822,6 @@
 
             // 🎚️ 3개월 캐러셀(지난달·당월·다음달) + 전체 12개월 보기 토글
             const wrapper = document.getElementById('flowWrapper');
-            const rangeHint = document.getElementById('rangeHint');
             const toggleBtn = document.getElementById('toggleViewBtn');
             const navPrev = document.getElementById('navPrev');
             const navNext = document.getElementById('navNext');
@@ -841,7 +829,7 @@
 
             const viewport = document.getElementById('flowViewport');
             const grid = document.getElementById('flowGrid');
-            const GAP = 20; // .flow-grid gap(px)와 동일
+            const GAP = 48; // 3개월 캐러셀 카드 사이 간격(px)
 
             let viewMode = 'compact';        // 'compact'(3개월) | 'all'(전체)
             function clampStart(s) { return Math.min(10, Math.max(1, s)); }
@@ -876,16 +864,15 @@
             function positionTrack(animate) {
                 if (viewMode !== 'compact') return;
                 if (!animate) grid.style.transition = 'none';
-                const vw = viewport.clientWidth;
-                const cardW = (vw - GAP * 2) / 3;
+                // 카드 실제 렌더 폭을 재서 정확히 이동(패딩/반올림에 의한 어긋남 방지)
+                const cardEl = grid.querySelector('.month-card');
+                const cardW = cardEl.getBoundingClientRect().width;
                 const step = cardW + GAP;
                 grid.style.transform = 'translateX(' + (-(windowStart - 1) * step) + 'px)';
                 if (!animate) { void grid.offsetWidth; grid.style.transition = ''; }
             }
 
             function updateRange() {
-                const v = [windowStart, windowStart + 1, windowStart + 2];
-                rangeHint.textContent = v.map(function(m) { return m + '월'; }).join('  ·  ');
                 navPrev.disabled = windowStart <= 1;
                 navNext.disabled = windowStart >= 10;
             }
@@ -893,7 +880,6 @@
             function render() {
                 if (viewMode === 'all') {
                     wrapper.classList.add('mode-all');
-                    rangeHint.style.display = 'none';
                     toggleBtn.textContent = '돌아가기';
                     toggleBtn.classList.add('mode-back');
                     grid.style.transition = '';
@@ -901,7 +887,6 @@
                     styleAll();
                 } else {
                     wrapper.classList.remove('mode-all');
-                    rangeHint.style.display = '';
                     toggleBtn.textContent = '전체 월';
                     toggleBtn.classList.remove('mode-back');
                     styleCompact();
