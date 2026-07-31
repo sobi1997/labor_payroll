@@ -35,6 +35,10 @@
         .date-row input.year { width: 75px; }
         .date-row input.month, .date-row input.day { width: 55px; }
 
+        /* 중도정산 활성화 토글 바 (퇴직금 계산기와 동일) */
+        .table-toolbar-sec2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .mode-select-area { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; color: #e65100; background: #fff3e0; padding: 6px 12px; border: 1px solid #ffe0b2; border-radius: 4px; }
+
         /* 블루 프리셋 툴바 라인 */
         .range-select-line { background: #e3f2fd; padding: 15px; border: 1px solid #90caf9; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; font-size: 14px; }
         .range-select-line label { font-weight: bold; color: #0d47a1; }
@@ -125,7 +129,13 @@
                 </div>
             </div>
 
-            <div class="group-title"><span>2</span> 재직기간 및 적립 기간 선택</div>
+            <div class="table-toolbar-sec2">
+                <div class="group-title" style="margin-bottom: 0;"><span>2</span> 재직기간 및 적립 기간 선택</div>
+                <div class="mode-select-area">
+                    <input type="checkbox" id="midCalcChk" onchange="toggleMidCalcMode()">
+                    <label for="midCalcChk" style="cursor:pointer;">퇴직금 중도정산 활성화</label>
+                </div>
+            </div>
             <div class="input-row-container">
                 <div class="date-input-line">
                     <div class="date-row">
@@ -139,6 +149,18 @@
                         <input type="text" id="leaveYear" class="year editable" maxlength="4" placeholder="0000" oninput="dateInputChanged()" onblur="normalizeDateInput(this, 'year')"> 년
                         <input type="text" id="leaveMonth" class="month editable" maxlength="2" placeholder="00" oninput="dateInputChanged()" onblur="normalizeDateInput(this, 'month')"> 월
                         <input type="text" id="leaveDay" class="day editable" maxlength="2" placeholder="00" oninput="dateInputChanged()" onblur="normalizeDateInput(this, 'day')"> 일
+                    </div>
+                    <div class="date-row">
+                        <label style="color:#1e40af;">퇴직금 기산일자</label>
+                        <input type="text" id="calcStartYear" class="year readonly" placeholder="0000" tabindex="-1" readonly onblur="normalizeDateInput(this, 'year')"> 년
+                        <input type="text" id="calcStartMonth" class="month readonly" placeholder="00" tabindex="-1" readonly onblur="normalizeDateInput(this, 'month')"> 월
+                        <input type="text" id="calcStartDay" class="day readonly" placeholder="00" tabindex="-1" readonly onblur="normalizeDateInput(this, 'day')"> 일
+                    </div>
+                    <div class="date-row">
+                        <label style="color:#1e40af;">퇴직금 산정일자</label>
+                        <input type="text" id="calcEndYear" class="year readonly" placeholder="0000" tabindex="-1" readonly onblur="normalizeDateInput(this, 'year')"> 년
+                        <input type="text" id="calcEndMonth" class="month readonly" placeholder="00" tabindex="-1" readonly onblur="normalizeDateInput(this, 'month')"> 월
+                        <input type="text" id="calcEndDay" class="day readonly" placeholder="00" tabindex="-1" readonly onblur="normalizeDateInput(this, 'day')"> 일
                     </div>
                 </div>
 
@@ -262,9 +284,43 @@
                 const month = Number(num);
                 input.value = month >= 1 && month <= 12 ? String(month).padStart(2, '0') : '';
             }
+            if (type === 'day') {
+                const day = Number(num);
+                input.value = day >= 1 && day <= 31 ? String(day).padStart(2, '0') : '';
+            }
+            syncCalcDates();
+        }
+
+        // 중도정산 비활성 시 기산일자 = 입사일자, 산정일자 = 퇴직일자로 자동 동기화
+        let isMidCalcMode = false;
+        function syncCalcDates() {
+            if (isMidCalcMode) return;
+            document.getElementById('calcStartYear').value = document.getElementById('joinYear').value;
+            document.getElementById('calcStartMonth').value = document.getElementById('joinMonth').value;
+            document.getElementById('calcStartDay').value = document.getElementById('joinDay').value;
+            document.getElementById('calcEndYear').value = document.getElementById('leaveYear').value;
+            document.getElementById('calcEndMonth').value = document.getElementById('leaveMonth').value;
+            document.getElementById('calcEndDay').value = document.getElementById('leaveDay').value;
+        }
+
+        function toggleMidCalcMode() {
+            isMidCalcMode = document.getElementById('midCalcChk').checked;
+            const ids = ['calcStartYear','calcStartMonth','calcStartDay','calcEndYear','calcEndMonth','calcEndDay'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (isMidCalcMode) {
+                    el.removeAttribute('readonly'); el.removeAttribute('tabindex');
+                    el.classList.remove('readonly'); el.classList.add('editable');
+                } else {
+                    el.setAttribute('readonly', 'true'); el.setAttribute('tabindex', '-1');
+                    el.classList.remove('editable'); el.classList.add('readonly');
+                }
+            });
+            if (!isMidCalcMode) syncCalcDates();
         }
 
         function dateInputChanged() {
+            syncCalcDates();
             renderTable();
         }
 
@@ -594,6 +650,7 @@
 
     <script>
         function printAccumStatement() {
+            syncCalcDates(); // 중도정산 비활성 시 기산일/산정일을 입사일/퇴직일 기준으로 최신화
             const companyName = document.getElementById('companyName').value;
             const workerName = document.getElementById('workerName').value;
             const employeeNo = document.getElementById('employeeNo').value;
@@ -610,6 +667,8 @@
 
             const joinDate = `${document.getElementById('joinYear').value || ''}-${document.getElementById('joinMonth').value || ''}-${document.getElementById('joinDay').value || ''}`;
             const leaveDate = `${document.getElementById('leaveYear').value || ''}-${document.getElementById('leaveMonth').value || ''}-${document.getElementById('leaveDay').value || ''}`;
+            const calcStartDate = `${document.getElementById('calcStartYear').value || ''}-${document.getElementById('calcStartMonth').value || ''}-${document.getElementById('calcStartDay').value || ''}`;
+            const calcEndDate = `${document.getElementById('calcEndYear').value || ''}-${document.getElementById('calcEndMonth').value || ''}-${document.getElementById('calcEndDay').value || ''}`;
             
             const totalBaseSum = document.getElementById('totalBaseSum').value;
             const totalAccumSum = document.getElementById('totalAccumSum').value;
@@ -668,6 +727,7 @@
                                 <tr><th>주민번호</th><td>${escapeHtml(rrn)}</td><th>부서</th><td>${escapeHtml(department)}</td><th>직위</th><td>${escapeHtml(position)}</td></tr>
                                 <tr><th>주소</th><td colspan="3">${escapeHtml(address)}</td><th>입금은행</th><td>${escapeHtml(bankName)}</td></tr>
                                 <tr><th>입사일자</th><td>${escapeHtml(joinDate)}</td><th>퇴사일자</th><td>${escapeHtml(leaveDate)}</td><th>입금계좌</th><td>${escapeHtml(bankAccount)}</td></tr>
+                                <tr><th>퇴직금 기산일</th><td>${escapeHtml(calcStartDate)}</td><th>퇴직금 산정일</th><td>${escapeHtml(calcEndDate)}</td><th></th><td></td></tr>
                             </table>
                             <table class="calc-table" style="margin-top:20px;">
                                 <colgroup><col style="width: 45%;"><col style="width: 27%;"><col style="width: 28%;"></colgroup>
@@ -758,6 +818,7 @@
                                     <tr><th>주민번호</th><td>${escapeHtml(rrn)}</td><th>부서</th><td>${escapeHtml(department)}</td><th>직위</th><td>${escapeHtml(position)}</td></tr>
                                     <tr><th>주소</th><td colspan="3">${escapeHtml(address)}</td><th>입금은행</th><td>${escapeHtml(bankName)}</td></tr>
                                     <tr><th>입사일자</th><td>${escapeHtml(joinDate)}</td><th>퇴사일자</th><td>${escapeHtml(leaveDate)}</td><th>입금계좌</th><td>${escapeHtml(bankAccount)}</td></tr>
+                                <tr><th>퇴직금 기산일</th><td>${escapeHtml(calcStartDate)}</td><th>퇴직금 산정일</th><td>${escapeHtml(calcEndDate)}</td><th></th><td></td></tr>
                                 </table>
                                 ${pageTablesHtml}
                                 ${finalTotalBlock}
@@ -782,6 +843,7 @@
                             <tr><th>주민번호</th><td>${escapeHtml(rrn)}</td><th>부서</th><td>${escapeHtml(department)}</td><th>직위</th><td>${escapeHtml(position)}</td></tr>
                             <tr><th>주소</th><td colspan="3">${escapeHtml(address)}</td><th>입금은행</th><td>${escapeHtml(bankName)}</td></tr>
                             <tr><th>입사일자</th><td>${escapeHtml(joinDate)}</td><th>퇴사일자</th><td>${escapeHtml(leaveDate)}</td><th>입금계좌</th><td>${escapeHtml(bankAccount)}</td></tr>
+                                <tr><th>퇴직금 기산일</th><td>${escapeHtml(calcStartDate)}</td><th>퇴직금 산정일</th><td>${escapeHtml(calcEndDate)}</td><th></th><td></td></tr>
                         </table>
                         <table class="calc-table" style="margin-top:20px;">
                             <colgroup><col style="width: 45%;"><col style="width: 27%;"><col style="width: 28%;"></colgroup>
