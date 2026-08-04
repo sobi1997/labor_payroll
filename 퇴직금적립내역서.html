@@ -215,8 +215,8 @@
                     
                     <button type="button" id="btnToggleFold" class="btn-toggle-fold" onclick="toggleTableFold()">▼ 명세 펼치기</button>
                     <div class="view-mode-toggle">
-                        <button type="button" id="btnViewMonth" class="active" onclick="switchViewMode('month')">월별 보기</button>
-                        <button type="button" id="btnViewYear" onclick="switchViewMode('year')">연도별 보기</button>
+                        <button type="button" id="btnViewMonth" class="active" onclick="switchViewMode('month')">월별 계산</button>
+                        <button type="button" id="btnViewYear" onclick="switchViewMode('year')">연도별 계산</button>
                     </div>
                 </div>
             </div>
@@ -347,15 +347,19 @@
             return clean;
         }
 
+        // 적립액 원단위 반올림 규칙
+        //  · 유지 : 소수점 첫째자리에서 올림 (원단위, 예 108.3 → 109)
+        //  · 올림 : 10원 단위 올림 (예 109 → 110)
+        //  · 버림 : 10원 단위 버림 (예 109 → 100)
+        function applyRound(val, option) {
+            if (option === 'up') return Math.ceil(val / 10) * 10;
+            if (option === 'down') return Math.floor(val / 10) * 10;
+            return Math.ceil(val);
+        }
+
         function calculateAccumAmount(baseWageNum) {
             const option = document.querySelector('input[name="roundOption"]:checked').value;
-            if (option === 'up') {
-                return Math.ceil(baseWageNum / 12 / 10) * 10;
-            } else if (option === 'down') {
-                return Math.floor(baseWageNum / 12 / 10) * 10;
-            } else {
-                return Math.floor(baseWageNum / 12);
-            }
+            return applyRound(baseWageNum / 12, option);
         }
 
         function changeRoundOption() {
@@ -413,22 +417,23 @@
         }
 
         function buildYearGroupData() {
+            const option = document.querySelector('input[name="roundOption"]:checked').value;
             let yearMap = {};
             globalRawLines.forEach(row => {
                 if(!yearMap[row.yearGroup]) {
-                    yearMap[row.yearGroup] = { base: 0, accum: 0, memo: '' };
+                    yearMap[row.yearGroup] = { base: 0 };
                 }
                 yearMap[row.yearGroup].base += row.base;
-                yearMap[row.yearGroup].accum += row.accum;
             });
 
             globalYearLines = [];
             for(let yearKey in yearMap) {
+                const yBase = yearMap[yearKey].base;
                 globalYearLines.push({
-                    period: yearKey, 
-                    base: yearMap[yearKey].base,
-                    accum: yearMap[yearKey].accum,
-                    memo: '' 
+                    period: yearKey,
+                    base: yBase,
+                    accum: applyRound(yBase / 12, option), // 연도별 계산: 연 기준금액 총합 ÷ 12
+                    memo: ''
                 });
             }
         }
