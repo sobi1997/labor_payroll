@@ -167,7 +167,7 @@
         <a data-goto="1">통합노무관리</a>
         <a data-goto="2">계산기 · 양식</a>
         <a data-goto="3">메일 템플릿</a>
-        <a data-goto="4">상담일지 · 일정</a>
+        <a data-goto="4">기타</a>
     </div>
 </nav>
 
@@ -181,12 +181,12 @@
             <div class="inner">
                 <span class="eyebrow"><span class="dot"></span>Payroll Outsourcing</span>
                 <h1>급여 아웃소싱 실무를<br><span class="g">한 곳에서, 빠르고 정확하게</span></h1>
-                <p class="sub">노무법인 두웰 급여 아웃소싱 실무 포털 · 통합노무관리 · 계산기·양식 · 메일 템플릿 · 상담일지·일정을 한 곳에</p>
+                <p class="sub">노무법인 두웰 급여 아웃소싱 실무 포털 · 통합노무관리 · 계산기·양식 · 메일 템플릿 · 기타를 한 곳에</p>
                 <div class="cta" data-goto="1">실무 도구 보기 <span style="font-size:18px;">↓</span></div>
                 <div class="stats">
                     <div class="st"><b>5</b><span>실무 계산기</span></div>
                     <div class="st"><b>4</b><span>메일 템플릿</span></div>
-                    <div class="st"><b>3</b><span>상담일지 · 일정</span></div>
+                    <div class="st"><b>2</b><span>기타</span></div>
                 </div>
             </div>
             <div class="scroll-cue" data-goto="1">SCROLL<span class="chev"></span></div>
@@ -262,7 +262,7 @@
                 <button class="cat-tile" data-cat="new">
                     <span class="cat-cnt">1</span>
                     <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="mNew" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ff0c0"/><stop offset="1" stop-color="#16c2a3"/></linearGradient></defs><rect x="11" y="7" width="26" height="34" rx="6" fill="url(#mNew)"/><path d="M24 17v14M17 24h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></span>
-                    <span class="cat-name">신규</span>
+                    <span class="cat-name">신규업체</span>
                 </button>
                 <button class="cat-tile" data-cat="tax">
                     <span class="cat-cnt">1</span>
@@ -292,13 +292,13 @@
         <section class="section" id="form">
             <div class="blob blob-a" style="bottom:-220px;left:-160px;opacity:.38;"></div>
             <div class="section-head">
-                <span class="en">Consultation · Schedule</span>
-                <div class="ko">상담일지 · 일정</div>
-                <p class="desc">상담일지 작성양식과 월간·연간 일정을 한 곳에.</p>
+                <span class="en">Others</span>
+                <div class="ko">기타</div>
+                <p class="desc">월간·연간 일정과 상담일지 등 기타 실무 자료.</p>
             </div>
             <div class="card-grid cols-2">
-                <a class="card" href="상담일지.html"><span class="en">Consultation Log</span><span class="ko">상담일지 양식</span><span class="sub">고객사 인바운드 상담 내역 기록·캡처·공유용 (노무법인 표준)</span></a>
                 <a class="card" href="연간일정.html"><span class="en">Monthly · Annual</span><span class="ko">월간 · 연간 일정</span><span class="sub">3개월 보기(월간) · 전체 펼치면 12개월(연간) 일정 정리</span></a>
+                <a class="card" href="상담일지.html"><span class="en">Consultation Log</span><span class="ko">상담일지 양식</span><span class="sub">고객사 인바운드 상담 내역 기록·캡처·공유용 (노무법인 표준)</span></a>
             </div>
             <div class="credit">노무법인 두웰 · 급여 아웃소싱 실무 포털 &nbsp;|&nbsp; made by 전형섭</div>
         </section>
@@ -314,7 +314,7 @@
     const nav=document.getElementById('nav');
     const links=Array.from(document.querySelectorAll('.nav-links a'));
     const sections=Array.from(document.querySelectorAll('.section'));
-    const labels=['홈','통합노무관리','계산기 · 양식','메일 템플릿','상담일지 · 일정'];
+    const labels=['홈','통합노무관리','계산기 · 양식','메일 템플릿','기타'];
     let idx=0, locking=false;
     const isDesktop=()=>window.matchMedia('(min-width:901px)').matches;
 
@@ -383,32 +383,34 @@
         ]}
       },
       template:{
-        new:{name:'신규',items:[
-          {href:'신규업체 기초요청자료_템플릿.html',en:'New Client',ko:'신규업체 기초요청자료',sub:'약정서·EDI·통장사본 등 신규 사업장 정보 취합'}
+        new:{name:'신규업체',items:[
+          {href:'신규업체 기초요청자료 리뉴얼.html',en:'Basic Request',ko:'기초요청자료',sub:'대행약정·기초정보 요청 메일 생성'}
         ]},
         tax:{name:'세무연계',items:[
-          {href:'소득총액신고 세무요청_탬플릿.html',en:'Income Report',ko:'소득총액신고 세무요청',sub:'근로자·개인사업자대표 소득총액신고 서류 요청'}
+          {href:'소득총액신고 세무요청_탬플릿.html',en:'Income Report',ko:'개인사업자 소득·보수총액신고',sub:'근로자·개인사업자대표 소득총액신고 서류 요청'}
         ]},
         site:{name:'사업장',items:[
-          {href:'건강보험연말정산 분할납부안내.html',en:'Health Insurance',ko:'건강보험 분할납부 안내',sub:'건강보험 연말정산 정산보험료 분할납부 안내'}
+          {href:'건강보험연말정산 분할납부안내.html',en:'Health Insurance',ko:'건강보험 연말정산 분할납부',sub:'건강보험 연말정산 정산보험료 분할납부 안내'}
         ]},
         etc:{name:'기타',items:[
-          {href:'담당자 휴가안내_템플릿.html',en:'Vacation Notice',ko:'담당자 휴가 안내',sub:'담당자 부재기간·업무 복귀일 자동 안내'}
+          {href:'담당자 휴가안내_템플릿.html',en:'Vacation Notice',ko:'담당자 휴가',sub:'담당자 부재기간·업무 복귀일 자동 안내'}
         ]}
       }
     };
     const drillClosers=[];
+    const drillOpeners={};
+    let curOpen={sec:null,key:null};
     document.querySelectorAll('.section').forEach(sec=>{
         const grid=sec.querySelector('.cat-grid'), panel=sec.querySelector('.cat-panel'), data=DRILL[sec.id];
         if(!grid||!panel||!data) return;
         const cards=panel.querySelector('.cat-cards'), title=panel.querySelector('.cat-title');
         const tiles=grid.querySelectorAll('.cat-tile');
         let activeKey=null;
-        const close=()=>{ activeKey=null; tiles.forEach(t=>t.classList.remove('active')); panel.hidden=true; };
+        const close=()=>{ activeKey=null; tiles.forEach(t=>t.classList.remove('active')); panel.hidden=true; if(curOpen.sec===sec.id) curOpen={sec:null,key:null}; };
         const open=(key)=>{
             if(activeKey===key){ close(); return; }              // 같은 타일 재클릭 → 접기
             const c=data[key]; if(!c) return;
-            activeKey=key;
+            activeKey=key; curOpen={sec:sec.id,key:key};
             tiles.forEach(t=>t.classList.toggle('active', t.dataset.cat===key));
             title.textContent=c.name;
             cards.className='cat-cards card-grid '+(c.items.length>1?'cols-2':'single');
@@ -416,12 +418,32 @@
             panel.hidden=false;
         };
         tiles.forEach(t=>t.addEventListener('click',()=>open(t.dataset.cat)));
-        drillClosers.push(close);
+        drillClosers.push(close); drillOpeners[sec.id]=open;
     });
     function closeCat(){ drillClosers.forEach(fn=>fn()); }
 
+    // 🔙 도구로 이동 직전 상태 저장 → "이전"(뒤로가기)으로 돌아오면 그 화면 복원
+    document.addEventListener('click',function(e){
+        const a=e.target.closest('a.card');
+        if(a){ try{ sessionStorage.setItem('portalReturn', JSON.stringify({idx:idx, sec:curOpen.sec, key:curOpen.key})); }catch(_){} }
+    });
+    function restorePortalState(){
+        try{
+            const raw=sessionStorage.getItem('portalReturn'); if(!raw) return;
+            sessionStorage.removeItem('portalReturn');
+            const r=JSON.parse(raw);
+            if(typeof r.idx==='number' && r.idx>0){
+                const prev=track.style.transition; track.style.transition='none';
+                idx=Math.max(0,Math.min(sections.length-1,r.idx)); render();
+                void track.offsetWidth; track.style.transition=prev||'';
+            }
+            if(r.sec && r.key && drillOpeners[r.sec]) drillOpeners[r.sec](r.key);
+        }catch(_){}
+    }
+
     window.addEventListener('resize',render);
     render();
+    restorePortalState();
 </script>
 </body>
 </html>

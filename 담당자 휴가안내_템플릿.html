@@ -6,29 +6,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --border-color: #e2e8f0;
+            --primary-color: #2f6bff;
+            --primary-hover: #1b4dd1;
+            --bg-color: #edf1f9;
+            --border-color: #e6ecf6;
             --text-color: #334155;
         }
 
         * { box-sizing: border-box; }
 
         html, body, input, button, select, textarea {
-            font-family: 'Noto Sans KR', 'Pretendard', -apple-system, sans-serif;
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, sans-serif;
             letter-spacing: -0.5px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        body { margin: 0; padding: 20px; background: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; }
+        body { margin: 0; padding: 24px; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; }
 
-        .container { display: flex; width: 100%; max-width: 1400px; gap: 24px; height: calc(100vh - 40px); }
-        .panel { flex: 1; background: white; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .panel-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 16px; background: #fafafa; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 1360px; margin: 0 auto; gap: 22px; flex: 1; min-height: 0; }
+        .app-header{ position:relative; width:100%; max-width:1360px; margin:2px auto 18px; text-align:center; padding:12px 8px; }
+        .app-header .back{ position:absolute; left:0; top:0; display:inline-flex; align-items:center; gap:4px; background:#fff; color:var(--primary-color); text-decoration:none; font-size:13px; font-weight:700; padding:8px 15px; border-radius:100px; border:1px solid var(--border-color); box-shadow:0 4px 14px rgba(30,70,150,0.08); transition:all .18s; }
+        .app-header .back:hover{ background:var(--primary-color); color:#fff; border-color:var(--primary-color); }
+        .app-header h1{ font-size:clamp(22px,2.5vw,30px); font-weight:800; letter-spacing:-1px; margin:0; color:#2f6bff; }
+        .app-header h1 .g{ color:#2f6bff; }
+        .app-header .back{ top:12px; transform:none; z-index:5; }
+        .app-header .ttl{ position:relative; text-align:center; }
+        .app-header .ttl h1{ display:inline-block; position:relative; margin:0; }
+        .app-header .ttl h1 .crumb{ position:absolute; top:50%; right:calc(100% + 18px); transform:translateY(-50%); white-space:nowrap; font-size:0.8em; font-weight:700; color:#5b6b86; letter-spacing:-0.2px; }
+        .p-label{ display:flex; align-items:center; gap:9px; color:#16223a; }
+        .p-num{ width:24px; height:24px; border-radius:50%; background:#2f6bff; color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        @media (max-width:860px){ body{height:auto;} .container{flex-direction:column; min-height:0;} .panel{min-height:70vh;} .app-header .back{position:static; margin-bottom:12px;} }
+        .panel { flex: 1; background: white; border-radius: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 12px 34px rgba(30,70,150,0.10); }
+        .panel-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 16px; background: #ffffff; color: var(--primary-color); border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .hdr-home { font-size: 12.5px; font-weight: 600; color: var(--primary-color); text-decoration: none; padding: 5px 13px; border: 1px solid var(--border-color); border-radius: 100px; white-space: nowrap; transition: all .15s; }
+        .hdr-home:hover { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
         .panel-body { padding: 24px; overflow-y: auto; flex: 1; }
 
         /* 컨트롤러 스타일 */
@@ -37,18 +52,19 @@
         .input-text { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; color: #334155; background-color: white; font-family: 'Noto Sans KR', sans-serif; }
         .input-text:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
         .input-text[type="date"] { cursor: pointer; }
-        .input-warn-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 500; }
+        .input-warn-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: none !important; font-weight: 500; }
+        .req { color: #ef4444; font-weight: 700; margin-left: 3px; }
 
         /* 좌우 2칸 배열 */
         .field-row { display: flex; gap: 12px; margin-bottom: 16px; }
         .field-row .input-group { flex: 1; margin-bottom: 0; }
 
-        .section-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; background: #fdfdfd; }
+        .section-box { border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 22px; background: #fbfcfe; }
         .section-title { font-weight: 600; font-size: 15px; margin-bottom: 12px; color: var(--primary-color); }
 
         /* 프리뷰 스타일 */
         .preview-zone { display: flex; flex-direction: column; gap: 20px; }
-        .card-box { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-box { background: white; border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; position: relative; box-shadow: 0 6px 18px rgba(30,50,120,0.06); }
         .card-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
         .card-tag { font-weight: bold; color: var(--primary-color); font-size: 13px; }
 
@@ -56,8 +72,8 @@
         .mail-wrapper { font-size: 14px !important; line-height: 1.6 !important; font-family: 'Noto Sans KR', sans-serif !important; }
         .mail-wrapper * { font-family: 'Noto Sans KR', sans-serif !important; font-size: 14px !important; letter-spacing: -0.5px !important; }
 
-        .mini-copy-btn { background: #f1f5f9; color: #334155; border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s; min-width: 80px; text-align: center; }
-        .mini-copy-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .mini-copy-btn { background: var(--primary-color); color: #fff; border: none; padding: 8px 16px; border-radius: 100px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; min-width: 80px; text-align: center; box-shadow: 0 4px 12px rgba(47,107,255,0.18); }
+        .mini-copy-btn:hover { background: var(--primary-hover); color: white; }
         .mini-copy-btn.copied { background: #10b981 !important; color: white !important; border-color: #10b981 !important; }
 
         /* 필수 항목 미입력 시 뜨는 복사 차단 경고창 */
@@ -75,26 +91,31 @@
     </style>
 </head>
 <body>
-<div class="container">
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">기타 ›</span>담당자 휴가</h1></div>
+    </header>
+
+    <div class="container">
     <div class="panel">
-        <div class="panel-header">담당자 휴가 안내 양식</div>
+        <div class="panel-header"><span class="p-label"><span class="p-num">1</span>정보 입력</span></div>
         <div class="panel-body">
 
             <div class="field-row">
                 <div class="input-group">
-                    <label>담당자 이름</label>
+                    <label>담당자 이름 <span class="req">*</span></label>
                     <input type="text" id="empName" class="input-text" placeholder="홍길동" oninput="renderMail()">
                     <div id="nameWarn" class="input-warn-msg">⚠️ 이름을 기입해주세요.</div>
                 </div>
                 <div class="input-group">
-                    <label>직급</label>
+                    <label>직급 <span class="req">*</span></label>
                     <input type="text" id="empTitle" class="input-text" placeholder="노무사 / 대리 등" oninput="renderMail()">
                     <div id="titleWarn" class="input-warn-msg">⚠️ 직급을 기입해주세요.</div>
                 </div>
             </div>
 
             <div class="input-group">
-                <label>사유</label>
+                <label>사유 <span class="req">*</span></label>
                 <input type="text" id="reason" class="input-text" placeholder="연차 휴가 / 개인 사정 등" oninput="renderMail()">
                 <div id="reasonWarn" class="input-warn-msg">⚠️ 사유를 기입해주세요.</div>
             </div>
@@ -103,11 +124,11 @@
                 <div class="section-title">휴가 기간</div>
                 <div class="field-row" style="margin-bottom: 0;">
                     <div class="input-group">
-                        <label>시작일</label>
+                        <label>시작일 <span class="req">*</span></label>
                         <input type="date" id="startDate" class="input-text" onchange="renderMail()">
                     </div>
                     <div class="input-group">
-                        <label>종료일</label>
+                        <label>종료일 <span class="req">*</span></label>
                         <input type="date" id="endDate" class="input-text" onchange="renderMail()">
                     </div>
                 </div>
@@ -121,7 +142,7 @@
     </div>
 
     <div class="panel">
-        <div class="panel-header">메일 미리보기</div>
+        <div class="panel-header"><span class="p-label"><span class="p-num">2</span>완성된 메일</span></div>
         <div class="panel-body" style="background: #f1f5f9; display: flex; flex-direction: column; gap: 16px;">
 
             <div class="preview-zone">
@@ -220,13 +241,13 @@
             <div style="max-width: 600px; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; line-height: 1.6; color: #333333;">
                 <p style="margin: 0 0 16px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">안녕하십니까,</p>
 
-                <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">노무법인 두웰 <span style="font-weight: bold; color: #1e3a8a;">${name}</span> <span style="font-weight: bold; color: #1e3a8a;">${title}</span>입니다.</p>
+                <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">노무법인 두웰 <span style="font-weight: bold; color: #2b4d9e;">${name}</span> <span style="font-weight: bold; color: #2b4d9e;">${title}</span>입니다.</p>
 
-                <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;"><span style="font-weight: bold; color: #1e3a8a;">${reason}</span> 일정으로 인해 아래 기간 동안 자리를 비우게 되어 사전에 안내드립니다.</p>
+                <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;"><span style="font-weight: bold; color: #2b4d9e;">${reason}</span> 일정으로 인해 아래 기간 동안 자리를 비우게 되어 사전에 안내드립니다.</p>
 
-                <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 14px 16px; margin-bottom: 24px; border-radius: 0 6px 6px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">
-                    <div style="margin-bottom: 6px; font-family: 'Noto Sans KR', sans-serif;">휴가 기간 : <span style="font-weight: bold; color: #1e3a8a;">${startFmt}</span> ~ <span style="font-weight: bold; color: #1e3a8a;">${endFmt}</span></div>
-                    <div style="font-family: 'Noto Sans KR', sans-serif;">업무 복귀일 : <span style="font-weight: bold; color: #1e3a8a;">${returnFmt}</span></div>
+                <div style="background-color: #f8fafc; border-left: 4px solid #2b4d9e; padding: 14px 16px; margin-bottom: 24px; border-radius: 0 6px 6px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">
+                    <div style="margin-bottom: 6px; font-family: 'Noto Sans KR', sans-serif;">휴가 기간 : <span style="font-weight: bold; color: #2b4d9e;">${startFmt}</span> ~ <span style="font-weight: bold; color: #2b4d9e;">${endFmt}</span></div>
+                    <div style="font-family: 'Noto Sans KR', sans-serif;">업무 복귀일 : <span style="font-weight: bold; color: #2b4d9e;">${returnFmt}</span></div>
                 </div>
 
                 <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">상기 기간 중에는 업무 처리가 다소 지연될 수 있는 점 양해 부탁드리며,<br>요청 사항 또는 기타 문의사항은 메일로 회신 주시면 복귀 후 순차적으로 확인하여 신속히 안내드리겠습니다.</p>

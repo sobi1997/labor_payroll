@@ -61,32 +61,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --border-color: #e2e8f0;
+            --primary-color: #2f6bff;
+            --primary-hover: #1b4dd1;
+            --bg-color: #edf1f9;
+            --border-color: #e6ecf6;
             --text-color: #334155;
         }
 
         * { box-sizing: border-box; }
 
         html, body, input, button, select, textarea {
-            font-family: 'Noto Sans KR', 'Pretendard', -apple-system, sans-serif;
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, sans-serif;
             letter-spacing: -0.5px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        body { margin: 0; padding: 20px; background: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; }
+        body { margin: 0; padding: 24px; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; }
 
-        .container { display: flex; width: 100%; max-width: 1400px; gap: 24px; height: calc(100vh - 40px); }
-        .panel { flex: 1; background: white; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .panel-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 16px; background: #fafafa; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .container { display: flex; width: 100%; max-width: 1360px; margin: 0 auto; gap: 22px; flex: 1; min-height: 0; }
+        .app-header{ position:relative; width:100%; max-width:1360px; margin:2px auto 18px; text-align:center; padding:12px 8px; }
+        .app-header .back{ position:absolute; left:0; top:0; display:inline-flex; align-items:center; gap:4px; background:#fff; color:var(--primary-color); text-decoration:none; font-size:13px; font-weight:700; padding:8px 15px; border-radius:100px; border:1px solid var(--border-color); box-shadow:0 4px 14px rgba(30,70,150,0.08); transition:all .18s; }
+        .app-header .back:hover{ background:var(--primary-color); color:#fff; border-color:var(--primary-color); }
+        .app-header h1{ font-size:clamp(22px,2.5vw,30px); font-weight:800; letter-spacing:-1px; margin:0; color:#2f6bff; }
+        .app-header h1 .g{ color:#2f6bff; }
+        .app-header .back{ top:12px; transform:none; z-index:5; }
+        .app-header .ttl{ position:relative; text-align:center; }
+        .app-header .ttl h1{ display:inline-block; position:relative; margin:0; }
+        .app-header .ttl h1 .crumb{ position:absolute; top:50%; right:calc(100% + 18px); transform:translateY(-50%); white-space:nowrap; font-size:0.8em; font-weight:700; color:#5b6b86; letter-spacing:-0.2px; }
+        .p-label{ display:flex; align-items:center; gap:9px; color:#16223a; }
+        .p-num{ width:24px; height:24px; border-radius:50%; background:#2f6bff; color:#fff; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        @media (max-width:860px){ body{height:auto;} .container{flex-direction:column; min-height:0;} .panel{min-height:70vh;} .app-header .back{position:static; margin-bottom:12px;} }
+        .panel { flex: 1; background: white; border-radius: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-shadow: 0 12px 34px rgba(30,70,150,0.10); }
+        .panel-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 16px; background: #ffffff; color: var(--primary-color); border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .hdr-home { font-size: 12.5px; font-weight: 600; color: var(--primary-color); text-decoration: none; padding: 5px 13px; border: 1px solid var(--border-color); border-radius: 100px; white-space: nowrap; transition: all .15s; }
+        .hdr-home:hover { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
         .panel-body { padding: 24px; overflow-y: auto; flex: 1; }
         /* 3단 탭 스타일 */
-        .tab-container { display: flex; gap: 4px; padding: 12px 24px 0 24px; background: #fafafa; }
+        .tab-container { display: flex; gap: 4px; padding: 12px 24px 0 24px; background: #ffffff; }
         .tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 12px 8px; border: 1px solid var(--border-color); border-bottom: none; background: #e2e8f0; color: #64748b; border-radius: 8px 8px 0 0; cursor: pointer; transition: 0.15s; text-align: center; }
         .tab-btn.active { background: white; border-color: var(--border-color); position: relative; z-index: 2; box-shadow: 0 -2px 4px rgba(0,0,0,0.02); }
         .tab-label { font-weight: 700; font-size: 12.5px; color: #475569; white-space: nowrap; }
@@ -99,16 +114,17 @@
         .input-text, .input-select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; color: #334155; background-color: white; font-family: 'Noto Sans KR', sans-serif; }
         .input-text:focus, .input-select:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
         .input-text[type="date"] { cursor: pointer; }
-        .input-warn-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: none; font-weight: 500; }
+        .input-warn-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: none !important; font-weight: 500; }
+        .req { color: #ef4444; font-weight: 700; margin-left: 3px; }
         /* 첨부파일 체크 리마인더 - 발송 담당자용 UI 안내(메일 본문에는 포함되지 않음) */
         .attach-reminder { display: flex; align-items: flex-start; gap: 8px; margin-top: 4px; padding: 10px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 12.5px; color: #92400e; line-height: 1.5; }
         .attach-reminder-icon { font-size: 14px; line-height: 1.4; }
 
-        .section-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; background: #fdfdfd; }
+        .section-box { border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 22px; background: #fbfcfe; }
         .section-title { font-weight: 600; font-size: 15px; margin-bottom: 12px; color: var(--primary-color); }
         /* 프리뷰 스타일 */
         .preview-zone { display: flex; flex-direction: column; gap: 20px; }
-        .card-box { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-box { background: white; border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; position: relative; box-shadow: 0 6px 18px rgba(30,50,120,0.06); }
         .card-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
         .card-tag { font-weight: bold; color: var(--primary-color); font-size: 13px; }
 
@@ -116,8 +132,8 @@
         .mail-wrapper { font-size: 14px !important; line-height: 1.6 !important; font-family: 'Noto Sans KR', sans-serif !important; }
         .mail-wrapper * { font-family: 'Noto Sans KR', sans-serif !important; font-size: 14px !important; letter-spacing: -0.5px !important; }
 
-        .mini-copy-btn { background: #f1f5f9; color: #334155; border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s; min-width: 80px; text-align: center; }
-        .mini-copy-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .mini-copy-btn { background: var(--primary-color); color: #fff; border: none; padding: 8px 16px; border-radius: 100px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: 0.15s; min-width: 80px; text-align: center; box-shadow: 0 4px 12px rgba(47,107,255,0.18); }
+        .mini-copy-btn:hover { background: var(--primary-hover); color: white; }
         .mini-copy-btn.copied { background: #10b981 !important; color: white !important; border-color: #10b981 !important; }
 
         /* 필수 항목 미입력 시 뜨는 복사 차단 경고창 */
@@ -135,9 +151,14 @@
     </style>
 </head>
 <body>
-<div class="container">
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">사업장 ›</span>건강보험 연말정산 분할납부</h1></div>
+    </header>
+
+    <div class="container">
     <div class="panel">
-        <div class="panel-header" style="border-bottom: none; padding-bottom: 6px;">건강보험 연말정산 분할납부 신청여부 확인 양식</div>
+        <div class="panel-header" style="border-bottom: none; padding-bottom: 6px;"><span class="p-label"><span class="p-num">1</span>정보 입력</span></div>
 
         <div class="tab-container">
             <div id="tabWorker" class="tab-btn active" onclick="switchTab('worker')">
@@ -156,13 +177,13 @@
         <div class="panel-body" style="border-top: 1px solid var(--border-color);">
 
             <div class="input-group">
-                <label>사업장명</label>
+                <label>사업장명 <span class="req">*</span></label>
                 <input type="text" id="companyName" class="input-text" placeholder="노무법인 두웰" oninput="renderMail()">
                 <div id="companyWarn" class="input-warn-msg">⚠️ 사업장명을 기입해주세요.</div>
             </div>
 
             <div class="input-group">
-                <label>담당자 직통번호</label>
+                <label>담당자 직통번호 <span class="req">*</span></label>
                 <input type="text" id="contactInfo" class="input-text" placeholder="053-0000-0000" oninput="handleContactInput(this)">
                 <div id="contactWarn" class="input-warn-msg">⚠️ 연락처를 기입해주세요.</div>
             </div>
@@ -177,7 +198,7 @@
                 </select>
             </div>
             <div class="input-group">
-                <label id="labelDateNormal">회신기한</label>
+                <label id="labelDateNormal">회신기한 <span class="req">*</span></label>
                 <input type="date" id="dueDateNormal" class="input-text" onchange="renderMail()">
                 <div id="normalWarn" class="input-warn-msg">⚠️ 회신기한을 선택해주세요.</div>
             </div>
@@ -189,7 +210,7 @@
         </div>
     </div>
     <div class="panel">
-        <div class="panel-header">메일 미리보기</div>
+        <div class="panel-header"><span class="p-label"><span class="p-num">2</span>완성된 메일</span></div>
         <div class="panel-body" style="background: #f1f5f9; display: flex; flex-direction: column; gap: 16px;">
 
             <div class="preview-zone">
@@ -311,27 +332,27 @@
                 <p style="margin: 0 0 24px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">${yearAttr} 귀속 ${info.subjectGroupName} 연말정산 보험료가 확정됨에 따라, 정산 보험료 납부 방법과 관련해 안내드립니다.</p>
 
                 <div style="margin-bottom: 20px; font-family: 'Noto Sans KR', sans-serif;">
-                    <div style="font-weight: bold; color: #1e3a8a; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">1. 건강보험 연말정산이란</div>
+                    <div style="font-weight: bold; color: #2b4d9e; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">1. 건강보험 연말정산이란</div>
                     <div style="padding-left: 10px; color: #333333; font-family: 'Noto Sans KR', sans-serif;">- 실제 소득에 따른 '확정 보험료'와 이미 납부한 '고지 보험료'의 차액을 정산하는 과정</div>
                 </div>
 
                 <div style="margin-bottom: 20px; font-family: 'Noto Sans KR', sans-serif;">
-                    <div style="font-weight: bold; color: #1e3a8a; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">2. 납부방법</div>
+                    <div style="font-weight: bold; color: #2b4d9e; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">2. 납부방법</div>
                     <div style="padding-left: 10px; color: #333333; margin-bottom: 4px; font-family: 'Noto Sans KR', sans-serif;">- 분할납부 (별도 신청 필요, 최대 12개월까지 가능)</div>
                     <div style="padding-left: 10px; color: #333333; font-family: 'Noto Sans KR', sans-serif;">- 일시납부</div>
                 </div>
 
                 <div style="margin-bottom: 24px; font-family: 'Noto Sans KR', sans-serif;">
-                    <div style="font-weight: bold; color: #1e3a8a; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">3. 분할납부 대상인원</div>
+                    <div style="font-weight: bold; color: #2b4d9e; margin-bottom: 8px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif;">3. 분할납부 대상인원</div>
                     <div style="padding-left: 10px; color: #333333; font-family: 'Noto Sans KR', sans-serif;">- 연말정산 보험료가 당월(${info.targetMonth}) 보험료 이상 발생한 인원</div>
                 </div>
 
-                <p style="margin: 0 0 20px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">위 두 가지 납부 방법 중 분할납부를 신청 희망하시는 경우,<br><span style="font-weight: bold; color: #1e3a8a;">${dueNormalFormatted || ''}</span>까지 분할납부신청서 파일 내 인원별 분할납부횟수(N → N개월)를 작성하여 회신 부탁드립니다.</p>
+                <p style="margin: 0 0 20px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">위 두 가지 납부 방법 중 분할납부를 신청 희망하시는 경우,<br><span style="font-weight: bold; color: #2b4d9e;">${dueNormalFormatted || ''}</span>까지 분할납부신청서 파일 내 인원별 분할납부횟수(N → N개월)를 작성하여 회신 부탁드립니다.</p>
 
                 <p style="margin: 0 0 24px 0; font-size: 13px; color: #666666; font-family: 'Noto Sans KR', sans-serif;">(분할납부를 별도로 신청하지 않을 경우 자동으로 일시납부되는 점 안내드립니다)</p>
 
-                <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 12px 16px; margin-bottom: 24px; border-radius: 0 6px 6px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">
-                    <span style="font-weight: bold; color: #1e3a8a; font-family: 'Noto Sans KR', sans-serif;">담당자 직통번호 : ${contactText}</span>
+                <div style="background-color: #f8fafc; border-left: 4px solid #2b4d9e; padding: 12px 16px; margin-bottom: 24px; border-radius: 0 6px 6px 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">
+                    <span style="font-weight: bold; color: #2b4d9e; font-family: 'Noto Sans KR', sans-serif;">담당자 직통번호 : ${contactText}</span>
                 </div>
 
                 <p style="margin: 0; font-family: 'Noto Sans KR', sans-serif; color: #333333;">감사합니다.</p>
