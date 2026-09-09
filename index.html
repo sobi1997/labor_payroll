@@ -1,402 +1,427 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>노무법인 두웰 - 실무 통합 포털</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px 20px; color: #333; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>노무법인 두웰 · 급여 아웃소싱 실무 포털</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+    :root{
+        --bg:#ffffff;
+        --bg-soft:#f4f8ff;
+        --ink:#16223a;
+        --muted:#5b6b86;
+        --blue:#2f6bff;
+        --blue-deep:#1b4dd1;
+        --mint:#12c2a0;
+        --grad:linear-gradient(120deg,#2f6bff 0%,#12c2a0 100%);
+        --card-bd:#e6eef8;
+        --card-sh:0 12px 34px rgba(30,70,150,0.10);
+        --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    [hidden]{display:none!important;}
+    body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overflow:hidden;}
+    a{text-decoration:none;color:inherit;}
 
-        /* 🖥️ 대형 화면에 맞춘 메인 컨테이너 규격 확장 */
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #cfd8dc;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-            border-radius: 8px;
-            overflow: hidden;
-        }
+    /* ===== 네비게이션 ===== */
+    .nav{position:fixed;top:0;left:0;width:100%;z-index:50;display:flex;align-items:center;justify-content:space-between;
+        padding:20px 48px;transition:background .35s,padding .35s,box-shadow .35s;}
+    .nav.solid{background:rgba(255,255,255,0.92);padding:12px 48px;box-shadow:0 4px 22px rgba(20,40,90,0.08);backdrop-filter:blur(8px);}
+    .brand{display:flex;align-items:center;}
+    .brand .logo-img{height:32px;width:auto;display:block;transition:height .3s;}
+    .nav.solid .brand .logo-img{height:28px;}
+    .nav-links{display:flex;gap:34px;font-size:15px;font-weight:600;}
+    .nav-links a{position:relative;padding:4px 0;color:var(--ink);cursor:pointer;transition:color .2s;}
+    .nav-links a::after{content:"";position:absolute;left:0;bottom:-4px;width:0;height:2px;background:var(--grad);transition:width .25s;}
+    .nav-links a:hover,.nav-links a.active{color:var(--blue);}
+    .nav-links a.active::after,.nav-links a:hover::after{width:100%;}
+    .nav-toggle{display:none;font-size:26px;color:var(--ink);background:none;border:none;cursor:pointer;}
 
-        /* 🟦 헤더 영역 */
-        .launcher-header {
-            background-color: #0d47a1;
-            color: #fff;
-            padding: 30px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+    /* ===== 풀페이지 구조 ===== */
+    #fp{height:100vh;overflow:hidden;}
+    #fp-track{will-change:transform;transition:transform .9s cubic-bezier(.22,1,.36,1);}
+    .section{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:0 48px;text-align:center;overflow:hidden;}
+    .section.alt{background:var(--bg-soft);}
 
-        .header-icon {
-            fill: #90caf9;
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-        }
+    /* 은은한 그라데이션 블롭 */
+    .blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.55;pointer-events:none;z-index:0;}
+    .blob-a{width:640px;height:640px;background:radial-gradient(circle at 40% 40%,#8ff0d8,#4aa8ff 55%,transparent 72%);}
+    .blob-b{width:520px;height:520px;background:radial-gradient(circle at 60% 40%,#bcd4ff,#7ee0c8 60%,transparent 74%);}
 
-        .header-text { text-align: left; }
+    /* ===== 히어로 ===== */
+    .hero .inner{position:relative;z-index:2;max-width:940px;}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:2px;
+        color:var(--blue);background:rgba(47,107,255,0.09);border:1px solid rgba(47,107,255,0.2);
+        padding:7px 16px;border-radius:100px;margin-bottom:26px;text-transform:uppercase;}
+    .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--grad);}
+    .hero h1{font-size:clamp(30px,5vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1.28;color:var(--ink);}
+    .hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero p.sub{margin-top:22px;font-size:clamp(15px,2.2vw,20px);color:var(--muted);font-weight:500;line-height:1.6;}
+    .hero .cta{margin-top:38px;display:inline-flex;align-items:center;gap:10px;background:var(--grad);color:#fff;font-weight:700;font-size:16px;
+        padding:15px 30px;border-radius:100px;cursor:pointer;box-shadow:0 12px 26px rgba(47,107,255,0.32);transition:transform .2s,box-shadow .2s;}
+    .hero .cta:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(47,107,255,0.4);}
+    .hero .stats{margin-top:46px;display:flex;justify-content:center;gap:44px;flex-wrap:wrap;}
+    .hero .stats .st{text-align:center;}
+    .hero .stats .st b{display:block;font-size:30px;font-weight:800;color:var(--blue-deep);}
+    .hero .stats .st span{font-size:13px;color:var(--muted);font-weight:500;}
+    .scroll-cue{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2;color:var(--muted);font-size:12px;letter-spacing:2px;cursor:pointer;font-weight:600;}
+    .scroll-cue .chev{display:block;margin:8px auto 0;width:13px;height:13px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:rotate(45deg);animation:bob 1.6s infinite;}
+    @keyframes bob{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(6px);}}
 
-        .header-text h1 {
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
-        }
+    /* ===== 섹션 헤더 ===== */
+    .section-head{position:relative;z-index:2;margin-bottom:44px;}
+    .section-head .en{display:block;font-size:13px;font-weight:700;letter-spacing:4px;color:var(--blue);text-transform:uppercase;margin-bottom:12px;}
+    .section-head .ko{font-size:clamp(26px,3.6vw,40px);font-weight:800;letter-spacing:-1px;color:var(--ink);}
+    .section-head .desc{margin-top:16px;font-size:15px;color:var(--muted);font-weight:500;}
 
-        .header-text p {
-            font-size: 13px;
-            color: #90caf9;
-        }
+    /* ===== 카드 그리드 ===== */
+    .card-grid{position:relative;z-index:2;display:grid;gap:22px;width:100%;max-width:1080px;}
+    .card-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+    .card-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+    .card-grid.single{max-width:540px;grid-template-columns:1fr;}
+    .card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:172px;padding:24px;text-align:left;
+        background:#fff;border:1px solid var(--card-bd);border-radius:16px;overflow:hidden;box-shadow:var(--card-sh);
+        transition:transform .25s,border-color .25s,box-shadow .25s;}
+    .card::after{content:"";position:absolute;top:0;left:0;width:100%;height:4px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform .3s;}
+    .card::before{content:"+";position:absolute;top:18px;right:20px;font-size:22px;font-weight:300;color:var(--blue);transition:transform .25s;}
+    .card:hover{transform:translateY(-6px);border-color:transparent;box-shadow:0 20px 42px rgba(30,70,150,0.16);}
+    .card:hover::after{transform:scaleX(1);}
+    .card:hover::before{transform:rotate(90deg);}
+    .card .en{font-size:12.5px;letter-spacing:0.5px;color:var(--blue);font-weight:600;margin-bottom:9px;}
+    .card .ko{font-size:21px;font-weight:700;letter-spacing:-0.5px;line-height:1.3;color:var(--ink);}
+    .card .sub{margin-top:10px;font-size:13px;color:var(--muted);font-weight:400;line-height:1.55;}
+    .card-grid.single .card{min-height:200px;}
+    .card-grid.single .card .ko{font-size:26px;}
 
-        .launcher-body {
-            padding: 25px;
-        }
+    /* ===== 통합노무관리 드롭존 ===== */
+    .dropzone{position:relative;z-index:2;width:100%;max-width:820px;min-height:300px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:13px;background:#fff;border:2px dashed #b9cdf0;border-radius:20px;
+        box-shadow:var(--card-sh);padding:52px 30px;text-align:center;transition:border-color .25s,background .25s,transform .25s;}
+    .dropzone:hover{border-color:var(--blue);background:#fbfdff;transform:translateY(-3px);}
+    .dropzone .dz-icon{width:62px;height:62px;border-radius:50%;background:rgba(47,107,255,0.09);display:flex;
+        align-items:center;justify-content:center;color:var(--blue);font-size:30px;font-weight:300;}
+    .dropzone .dz-main{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-0.3px;}
+    .dropzone .dz-sub{font-size:13.5px;color:var(--muted);}
+    .dropzone .dz-badge{margin-top:4px;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--blue);
+        background:rgba(47,107,255,0.09);border:1px solid rgba(47,107,255,0.2);padding:5px 13px;border-radius:100px;}
 
-        /* 사내 공지 및 안내 박스 */
-        .portal-notice-box {
-            padding: 0 2px;
-            margin-bottom: 18px;
-            font-size: 13px;
-            color: #475569;
-            line-height: 1.6;
-        }
-        .portal-notice-box strong {
-            color: #0d47a1;
-        }
+    /* ===== 카테고리 타일 ===== */
+    .cat-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:100%;max-width:880px;}
+    .cat-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;
+        padding:30px 16px 24px;background:#fff;border:1px solid var(--card-bd);border-radius:18px;box-shadow:var(--card-sh);
+        cursor:pointer;font-family:var(--font);transition:transform .22s,box-shadow .22s,border-color .22s;}
+    .cat-tile:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(30,70,150,0.17);border-color:transparent;}
+    .cat-tile.active{border-color:var(--blue);box-shadow:0 16px 34px rgba(47,107,255,0.20);transform:translateY(-4px);background:#f6faff;}
+    .cat-tile.active .cat-cnt{background:var(--blue);color:#fff;}
+    .cat-ico{width:56px;height:56px;display:flex;align-items:center;justify-content:center;}
+    .cat-ico svg{width:56px;height:56px;display:block;filter:drop-shadow(0 6px 11px rgba(30,70,150,0.20));}
+    .cat-name{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:-0.3px;}
+    .cat-cnt{position:absolute;top:12px;right:13px;font-size:11px;font-weight:700;color:var(--blue);
+        background:rgba(47,107,255,0.1);border-radius:100px;padding:2px 9px;}
+    /* 펼침 패널 (타일 아래로 확장) */
+    .cat-panel{position:relative;z-index:2;width:100%;max-width:960px;margin-top:26px;
+        animation:catOpen .28s cubic-bezier(.22,1,.36,1);}
+    @keyframes catOpen{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+    .cat-title{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-0.4px;margin-bottom:16px;text-align:center;}
+    .cat-cards{margin-left:auto;margin-right:auto;}
 
-        /* 🗓️ 연간 업무 플로우 바로가기 (작은 링크 바) */
-        .flow-link-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 6px;
-            padding: 9px 16px;
-            margin: 0 0 25px 0;
-            font-size: 12.5px;
-            color: #1d4ed8;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.15s ease-in-out;
-        }
-        .flow-link-bar:hover {
-            background-color: #dbeafe;
-            border-color: #60a5fa;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
-        }
-        .flow-link-bar .flow-link-desc {
-            font-size: 11.5px;
-            color: #64748b;
-            font-weight: normal;
-        }
-        .flow-link-bar .flow-link-arrow {
-            flex-shrink: 0;
-            font-size: 12px;
-        }
+    /* ===== 우측 도트 네비 ===== */
+    .dots{position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:15px;}
+    .dots button{width:10px;height:10px;border-radius:50%;border:1.5px solid #b9c6da;background:transparent;cursor:pointer;padding:0;transition:all .25s;position:relative;}
+    .dots button.active{background:var(--blue);border-color:var(--blue);transform:scale(1.3);}
+    .dots button span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;color:#fff;
+        background:var(--ink);padding:3px 9px;border-radius:5px;opacity:0;pointer-events:none;transition:opacity .2s;}
+    .dots button:hover span{opacity:1;}
+    .pageno{position:fixed;right:30px;bottom:26px;z-index:40;font-size:13px;letter-spacing:1px;color:var(--muted);}
+    .pageno b{color:var(--blue-deep);font-weight:800;}
+    .credit{position:absolute;bottom:22px;left:0;width:100%;text-align:center;font-size:12px;color:#9aa8c0;z-index:2;}
 
-        /* 🗂️ 좌우 대형 2분할 레이아웃 그리드 */
-        .portal-main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 좌우 50% 분할 */
-            gap: 24px;
-        }
-
-        /* 좌측/우측 내부 세로 배열용 컬럼 */
-        .layout-column {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        /* 📂 섹션 상자 및 타이틀 */
-        .section-container {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .section-title {
-            font-size: 15px;
-            font-weight: bold;
-            color: #0d47a1;
-            margin-bottom: 15px;
-            padding-left: 8px;
-            border-left: 4px solid #0d47a1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* 🎛️ 카드 배치용 내부 그리드 */
-        .grid-inside {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        /* 단일 카드로 꽉 채워야 할 때 사용 */
-        .grid-full-width {
-            grid-template-columns: 1fr;
-        }
-
-        /* 🔘 카드형 런처 버튼 디자인 */
-        .btn-card {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            text-decoration: none;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            padding: 16px;
-            border-radius: 6px;
-            transition: all 0.15s ease-in-out;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            min-height: 110px;
-        }
-
-        .btn-card:hover {
-            background-color: #f8fafc;
-            border-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
-        }
-
-        .btn-content-top {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            text-align: left;
-        }
-
-        .btn-title-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 2px;
-        }
-
-        .btn-title {
-            font-size: 14.5px;
-            font-weight: bold;
-            color: #1e293b;
-            transition: color 0.15s;
-        }
-        .btn-card:hover .btn-title {
-            color: #2563eb;
-        }
-
-        /* 🏷️ 배지 스타일 규칙 변환 */
-        .btn-badge {
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        .badge-calc { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-        .badge-template { background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        .badge-form { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-
-        .btn-desc {
-            font-size: 12px;
-            color: #64748b;
-            font-weight: normal;
-            line-height: 1.5;
-        }
-
-        .footer-logo {
-            text-align: right;
-            margin-top: 25px;
-            border-top: 1px dashed #e2e8f0;
-            padding-top: 15px;
-        }
-
-        .footer-logo .maker-credit {
-            font-size: 11px;
-            color: #94a3b8;
-            font-weight: normal;
-        }
-
-        /* 모바일 및 태블릿 대응 반응형 스크립트 */
-        @media (max-width: 900px) {
-            .portal-main-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 500px) {
-            .grid-inside {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    /* ===== 모바일 ===== */
+    @media (max-width:900px){
+        body{overflow:auto;}
+        #fp{height:auto;overflow:visible;}
+        #fp-track{transform:none!important;transition:none;}
+        .section{height:auto;min-height:100vh;padding:120px 20px 80px;}
+        .nav{padding:14px 20px;background:rgba(255,255,255,0.95);box-shadow:0 2px 14px rgba(20,40,90,0.07);}
+        .nav-links{position:fixed;inset:0 0 0 auto;width:72%;max-width:300px;flex-direction:column;gap:0;background:#fff;
+            padding:90px 28px;transform:translateX(100%);transition:transform .3s;box-shadow:-10px 0 40px rgba(20,40,90,.12);}
+        .nav-links.open{transform:translateX(0);}
+        .nav-links a{padding:16px 0;border-bottom:1px solid #eef2f8;}
+        .nav-toggle{display:block;z-index:60;}
+        .dots,.pageno{display:none;}
+        .card-grid.cols-3,.card-grid.cols-2{grid-template-columns:1fr;max-width:460px;}
+        .cat-grid{grid-template-columns:repeat(2,1fr);max-width:420px;}
+        .card{min-height:auto;}
+        .hero .stats{gap:26px;}
+    }
+</style>
 </head>
 <body>
 
-    <div class="container">
-
-        <div class="launcher-header">
-            <svg class="header-icon" viewBox="0 0 24 24">
-                <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-4v2h4v-2zm0 4h-4v2h4v-2z"/>
-            </svg>
-            <div class="header-text">
-                <h1>노무법인 두웰 - 실무 통합 포털</h1>
-                <p>계산기 프로그램 · 메일 템플릿 엔진 · 행정 서식 라이브러리</p>
-            </div>
-        </div>
-
-        <div class="launcher-body">
-            
-            <div class="portal-notice-box">
-                <strong>[운영 안내]</strong> 원하시는 실무 대시보드를 선택하시면 링크로 즉시 연결됩니다. 계산기, 템플릿 계속 추가중입니다.
-            </div>
-
-            <!-- 🗓️ 연간 업무 플로우 바로가기 -->
-            <a href="아웃소싱 연간업무플로우.html" class="flow-link-bar">
-                <span>🗓️ 아웃소싱 연간 업무 플로우 <span class="flow-link-desc">— 월별 급여대행 · 4대보험 정기신고 · 연간 노무행정 일정 한눈에 보기</span></span>
-                <span class="flow-link-arrow">바로가기 →</span>
-            </a>
-
-            <div class="portal-main-layout">
-                
-                <div class="layout-column">
-                    
-                    <div class="section-container">
-                        <div class="section-title">📊 실무 연산 계산기</div>
-                        <div class="grid-inside">
-                            <a href="퇴직금계산.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">퇴직금 계산기</span>
-                                        <span class="btn-badge badge-calc">계산기</span>
-                                    </div>
-                                    <div class="btn-desc">평균임금 산정 및 재직일수 기반 법정 퇴직금 자동 추산</div>
-                                </div>
-                            </a>
-
-                            <a href="퇴사자4대보험정산.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">퇴사자 4대보험 정산</span>
-                                        <span class="btn-badge badge-calc">계산기</span>
-                                    </div>
-                                    <div class="btn-desc">중도퇴사자 건강보험ㆍ국민연금 등 중도 정산 연산 툴</div>
-                                </div>
-                            </a>
-
-                            <a href="상시근로자수판단.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">상시근로자 수 계산기</span>
-                                        <span class="btn-badge badge-calc">계산기</span>
-                                    </div>
-                                    <div class="btn-desc">실근무표 기준 가동일수 분할 및 5인 이상 여부 법리 판단</div>
-                                </div>
-                            </a>
-
-                            <a href="퇴직금적립내역서.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">퇴직금 적립 내역서</span>
-                                        <span class="btn-badge badge-calc">계산기</span>
-                                    </div>
-                                    <div class="btn-desc">연도별/임직원별 퇴직급여 충당금 및 누적 적립 내역 관리</div>
-                                </div>
-                            </a>
-
-                            <a href="임신기근로시간단축_대상기간계산.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">임신기 근로시간단축 대상기간</span>
-                                        <span class="btn-badge badge-calc">계산기</span>
-                                    </div>
-                                    <div class="btn-desc">출산예정일 기준 12주 이내·32주 이후 근로시간 단축 대상기간 자동 계산</div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="layout-column">
-                    
-                    <div class="section-container">
-                        <div class="section-title">✉️ 실무 안내 메일 템플릿</div>
-                        <div class="grid-inside">
-                            <a href="신규업체 기초요청자료_템플릿.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">신규업체 기초요청자료</span>
-                                        <span class="btn-badge badge-template">템플릿</span>
-                                    </div>
-                                    <div class="btn-desc">약정서, EDI, 통장사본 등 신규 사업장 정보 취합</div>
-                                </div>
-                            </a>
-
-                            <a href="소득총액신고 세무요청_탬플릿.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">소득총액신고 세무요청</span>
-                                        <span class="btn-badge badge-template">템플릿</span>
-                                    </div>
-                                    <div class="btn-desc">근로자, 개인사업자대표 소득총액신고 서류요청</div>
-                                </div>
-                            </a>
-
-                            <!-- 🔽 새로 추가된 건강보험 연말정산 템플릿 🔽 -->
-                            <a href="건강보험연말정산 분할납부안내.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">건강보험 분할납부 안내</span>
-                                        <span class="btn-badge badge-template">템플릿</span>
-                                    </div>
-                                    <div class="btn-desc">건강보험 연말정산 정산보험료 분할납부 제도 및 신청 안내</div>
-                                </div>
-                            </a>
-                            <!-- 🔼 새로 추가된 건강보험 연말정산 템플릿 🔼 -->
-
-                            <a href="담당자 휴가안내_템플릿.html" class="btn-card">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">담당자 휴가 안내</span>
-                                        <span class="btn-badge badge-template">템플릿</span>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="section-container">
-                        <div class="section-title">📂 사내 실무 행정 양식</div>
-                        <div class="grid-inside grid-full-width">
-                            <a href="상담일지.html" class="btn-card" style="min-height: 90px;">
-                                <div class="btn-content-top">
-                                    <div class="btn-title-row">
-                                        <span class="btn-title">상담일지 작성 양식</span>
-                                        <span class="btn-badge badge-form">양식</span>
-                                    </div>
-                                    <div class="btn-desc">고객사 인바운드 상담 내역 기록 및 캡처 공유용</div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="footer-logo">
-                <span class="maker-credit">made by 전형섭</span>
-            </div>
-        </div>
+<nav class="nav" id="nav">
+    <a class="brand" data-goto="0"><img src="logo_dowell_navy.png" alt="Labor law Firm DOWELL" class="logo-img"></a>
+    <button class="nav-toggle" id="navToggle" aria-label="menu">☰</button>
+    <div class="nav-links" id="navLinks">
+        <a data-goto="0">홈</a>
+        <a data-goto="1">통합노무관리</a>
+        <a data-goto="2">계산기 · 양식</a>
+        <a data-goto="3">메일 템플릿</a>
+        <a data-goto="4">상담일지 · 일정</a>
     </div>
+</nav>
 
+<div id="fp">
+    <div id="fp-track">
+
+        <!-- 0. 홈 -->
+        <section class="section hero" id="home">
+            <div class="blob blob-a" style="top:-200px;left:-140px;"></div>
+            <div class="blob blob-b" style="bottom:-180px;right:-120px;opacity:.4;"></div>
+            <div class="inner">
+                <span class="eyebrow"><span class="dot"></span>Payroll Outsourcing</span>
+                <h1>급여 아웃소싱 실무를<br><span class="g">한 곳에서, 빠르고 정확하게</span></h1>
+                <p class="sub">노무법인 두웰 급여 아웃소싱 실무 포털 · 통합노무관리 · 계산기·양식 · 메일 템플릿 · 상담일지·일정을 한 곳에</p>
+                <div class="cta" data-goto="1">실무 도구 보기 <span style="font-size:18px;">↓</span></div>
+                <div class="stats">
+                    <div class="st"><b>5</b><span>실무 계산기</span></div>
+                    <div class="st"><b>4</b><span>메일 템플릿</span></div>
+                    <div class="st"><b>3</b><span>상담일지 · 일정</span></div>
+                </div>
+            </div>
+            <div class="scroll-cue" data-goto="1">SCROLL<span class="chev"></span></div>
+        </section>
+
+        <!-- 1. 통합노무관리 (틀만 · 드롭존) -->
+        <section class="section alt" id="lm">
+            <div class="blob blob-a" style="top:-200px;left:-150px;opacity:.4;"></div>
+            <div class="section-head">
+                <span class="en">Labor Management</span>
+                <div class="ko">통합노무관리</div>
+                <p class="desc">엑셀 파일을 올려 통합 노무 데이터를 관리하는 공간입니다.</p>
+            </div>
+            <div class="dropzone" id="lmDrop">
+                <div class="dz-icon">＋</div>
+                <div class="dz-main">통합노무관리 파일을 여기에 끌어다 놓으세요</div>
+                <div class="dz-sub">엑셀 파일(.xlsx) 업로드 영역</div>
+                <div class="dz-badge">준비 중</div>
+            </div>
+        </section>
+
+        <!-- 2. 계산기 -->
+        <section class="section" id="calc">
+            <div class="blob blob-a" style="top:-220px;right:-160px;opacity:.4;"></div>
+            <div class="section-head">
+                <span class="en">Calculators · Forms</span>
+                <div class="ko">계산기 · 양식</div>
+                <p class="desc" id="calcDesc">카테고리를 선택하면 관련 계산기·양식이 열립니다.</p>
+            </div>
+
+            <!-- 카테고리 타일 -->
+            <div class="cat-grid" id="catGrid">
+                <button class="cat-tile" data-cat="retire">
+                    <span class="cat-cnt">2</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd76f"/><stop offset="1" stop-color="#ff9d2e"/></linearGradient></defs><path d="M18 8h12l-3.2 5.2C33 16 37 22 37 29c0 6-5 11-13 11s-13-5-13-11c0-7 4-13 10.2-15.8L18 8z" fill="url(#gGold)"/><text x="24" y="33" font-size="14" font-weight="800" fill="#fff" text-anchor="middle" font-family="Pretendard,sans-serif">₩</text></svg></span>
+                    <span class="cat-name">퇴직금</span>
+                </button>
+                <button class="cat-tile" data-cat="insure">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6fb8ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient></defs><path d="M24 6l14 5v9c0 9-6 16-14 19-8-3-14-10-14-19v-9l14-5z" fill="url(#gBlue)"/><path d="M17 24.5l5 5 9.5-10.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="cat-name">4대보험</span>
+                </button>
+                <button class="cat-tile" data-cat="worker">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8be78b"/><stop offset="1" stop-color="#22b07d"/></linearGradient></defs><circle cx="18" cy="17" r="7" fill="url(#gGreen)"/><circle cx="33" cy="19" r="5.5" fill="url(#gGreen)" opacity=".7"/><path d="M5 40c0-7.2 5.5-11.5 13-11.5S31 32.8 31 40z" fill="url(#gGreen)"/><path d="M29 40c0-5 3.2-9 8.5-9 4.3 0 7.5 3 7.5 8.5" fill="url(#gGreen)" opacity=".7"/></svg></span>
+                    <span class="cat-name">근로자 관리</span>
+                </button>
+                <button class="cat-tile" data-cat="mother">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="gPink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ecb"/><stop offset="1" stop-color="#c86bff"/></linearGradient></defs><circle cx="24" cy="24" r="17" fill="url(#gPink)"/><path d="M24 14v10.5l7 4" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="cat-name">모성보호</span>
+                </button>
+            </div>
+
+            <!-- 카테고리별 도구 목록 (드릴다운) -->
+            <div class="cat-panel" id="catPanel" hidden>
+                <div class="cat-title" id="catTitle"></div>
+                <div class="cat-cards card-grid cols-2" id="catCards"></div>
+            </div>
+        </section>
+
+        <!-- 3. 메일 템플릿 -->
+        <section class="section alt" id="template">
+            <div class="blob blob-b" style="top:-200px;left:-150px;opacity:.45;"></div>
+            <div class="section-head">
+                <span class="en">Mail Templates</span>
+                <div class="ko">메일 템플릿</div>
+                <p class="desc">카테고리를 선택하면 관련 메일 템플릿이 열립니다.</p>
+            </div>
+
+            <!-- 카테고리 타일 -->
+            <div class="cat-grid" id="mailGrid">
+                <button class="cat-tile" data-cat="new">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="mNew" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ff0c0"/><stop offset="1" stop-color="#16c2a3"/></linearGradient></defs><rect x="11" y="7" width="26" height="34" rx="6" fill="url(#mNew)"/><path d="M24 17v14M17 24h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></span>
+                    <span class="cat-name">신규</span>
+                </button>
+                <button class="cat-tile" data-cat="tax">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="mTax" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fb6ff"/><stop offset="1" stop-color="#3a6ff0"/></linearGradient></defs><rect x="11" y="7" width="26" height="34" rx="6" fill="url(#mTax)"/><circle cx="19.5" cy="19.5" r="2.4" fill="#fff"/><circle cx="28.5" cy="28.5" r="2.4" fill="#fff"/><path d="M30 18L18 30" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></span>
+                    <span class="cat-name">세무연계</span>
+                </button>
+                <button class="cat-tile" data-cat="site">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="mSite" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc978"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs><rect x="12" y="9" width="24" height="32" rx="4" fill="url(#mSite)"/><g fill="#fff"><rect x="17" y="15" width="4" height="4" rx="1"/><rect x="27" y="15" width="4" height="4" rx="1"/><rect x="17" y="23" width="4" height="4" rx="1"/><rect x="27" y="23" width="4" height="4" rx="1"/><rect x="21.5" y="32" width="5" height="9" rx="1"/></g></svg></span>
+                    <span class="cat-name">사업장</span>
+                </button>
+                <button class="cat-tile" data-cat="etc">
+                    <span class="cat-cnt">1</span>
+                    <span class="cat-ico"><svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="mEtc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a3ff"/><stop offset="1" stop-color="#8b6bff"/></linearGradient></defs><rect x="7" y="7" width="34" height="34" rx="10" fill="url(#mEtc)"/><g fill="#fff"><circle cx="16" cy="24" r="2.6"/><circle cx="24" cy="24" r="2.6"/><circle cx="32" cy="24" r="2.6"/></g></svg></span>
+                    <span class="cat-name">기타</span>
+                </button>
+            </div>
+
+            <!-- 카테고리별 목록 (드릴다운) -->
+            <div class="cat-panel" id="mailPanel" hidden>
+                <div class="cat-title"></div>
+                <div class="cat-cards card-grid cols-2"></div>
+            </div>
+        </section>
+
+        <!-- 4. 양식 · 플로우 (행정 양식 + 연간 플로우 통합) -->
+        <section class="section" id="form">
+            <div class="blob blob-a" style="bottom:-220px;left:-160px;opacity:.38;"></div>
+            <div class="section-head">
+                <span class="en">Consultation · Schedule</span>
+                <div class="ko">상담일지 · 일정</div>
+                <p class="desc">상담일지 작성양식과 월간·연간 일정을 한 곳에.</p>
+            </div>
+            <div class="card-grid cols-2">
+                <a class="card" href="상담일지.html"><span class="en">Consultation Log</span><span class="ko">상담일지 양식</span><span class="sub">고객사 인바운드 상담 내역 기록·캡처·공유용 (노무법인 표준)</span></a>
+                <a class="card" href="연간일정.html"><span class="en">Monthly · Annual</span><span class="ko">월간 · 연간 일정</span><span class="sub">3개월 보기(월간) · 전체 펼치면 12개월(연간) 일정 정리</span></a>
+            </div>
+            <div class="credit">노무법인 두웰 · 급여 아웃소싱 실무 포털 &nbsp;|&nbsp; made by 전형섭</div>
+        </section>
+
+    </div>
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="pageno" id="pageno"><b>01</b> / 05</div>
+
+<script>
+    const track=document.getElementById('fp-track');
+    const nav=document.getElementById('nav');
+    const links=Array.from(document.querySelectorAll('.nav-links a'));
+    const sections=Array.from(document.querySelectorAll('.section'));
+    const labels=['홈','통합노무관리','계산기 · 양식','메일 템플릿','상담일지 · 일정'];
+    let idx=0, locking=false;
+    const isDesktop=()=>window.matchMedia('(min-width:901px)').matches;
+
+    const dotsWrap=document.getElementById('dots');
+    sections.forEach((_,i)=>{
+        const b=document.createElement('button');
+        b.innerHTML='<span>'+labels[i]+'</span>';
+        b.addEventListener('click',()=>goTo(i));
+        dotsWrap.appendChild(b);
+    });
+    const dots=Array.from(dotsWrap.children);
+
+    function render(){
+        track.style.transform=isDesktop()?('translateY(-'+(idx*100)+'vh)'):'none';
+        dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+        links.forEach(a=>a.classList.toggle('active', +a.dataset.goto===idx));
+        document.getElementById('pageno').innerHTML='<b>'+String(idx+1).padStart(2,'0')+'</b> / 05';
+        nav.classList.toggle('solid', idx>0);
+    }
+    function goTo(i){
+        i=Math.max(0,Math.min(sections.length-1,i));
+        if(!isDesktop()){ closeCat(); sections[i].scrollIntoView({behavior:'smooth'}); idx=i; render(); return; }
+        if(i===idx||locking) return;
+        closeCat(); idx=i; render();
+        locking=true; setTimeout(()=>locking=false,950);
+    }
+
+    window.addEventListener('wheel',(e)=>{
+        if(!isDesktop()) return;
+        e.preventDefault();
+        if(locking) return;
+        if(e.deltaY>30) goTo(idx+1); else if(e.deltaY<-30) goTo(idx-1);
+    },{passive:false});
+    window.addEventListener('keydown',(e)=>{
+        if(!isDesktop()) return;
+        if(['ArrowDown','PageDown'].includes(e.key)){ e.preventDefault(); goTo(idx+1); }
+        else if(['ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); goTo(idx-1); }
+    });
+    let ty=null;
+    window.addEventListener('touchstart',(e)=>{ if(isDesktop()) ty=e.touches[0].clientY; },{passive:true});
+    window.addEventListener('touchend',(e)=>{
+        if(!isDesktop()||ty===null) return;
+        const dy=ty-e.changedTouches[0].clientY;
+        if(Math.abs(dy)>50){ dy>0?goTo(idx+1):goTo(idx-1); }
+        ty=null;
+    },{passive:true});
+    document.querySelectorAll('[data-goto]').forEach(el=>{
+        el.addEventListener('click',()=>{ goTo(+el.dataset.goto); document.getElementById('navLinks').classList.remove('open'); });
+    });
+    document.getElementById('navToggle').addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('open'));
+    /* ===== 카테고리 타일 드릴다운 (계산기·양식 / 메일 템플릿 공용) ===== */
+    const DRILL={
+      calc:{
+        retire:{name:'퇴직금',items:[
+          {href:'퇴직금계산.html',en:'Severance Pay',ko:'퇴직금 계산기',sub:'평균임금 산정·재직일수 기반 법정 퇴직금 자동 추산'},
+          {href:'퇴직금적립내역서.html',en:'Severance Reserve',ko:'퇴직금 적립 내역서',sub:'연도별·임직원별 퇴직급여 충당금 및 누적 적립 관리'}
+        ]},
+        insure:{name:'4대보험',items:[
+          {href:'퇴사자4대보험정산.html',en:'Insurance Settlement',ko:'퇴사자 4대보험 정산',sub:'중도퇴사자 건강보험·국민연금 등 중도 정산'}
+        ]},
+        worker:{name:'근로자 관리',items:[
+          {href:'상시근로자수판단.html',en:'Employee Count',ko:'상시근로자 수 계산',sub:'가동일수 분할 및 5인 이상 여부 법리 판단'}
+        ]},
+        mother:{name:'모성보호',items:[
+          {href:'임신기근로시간단축_대상기간계산.html',en:'Reduced Work Hours',ko:'임신기 근로시간단축',sub:'출산예정일 기준 12주 이내·32주 이후 대상기간 계산'}
+        ]}
+      },
+      template:{
+        new:{name:'신규',items:[
+          {href:'신규업체 기초요청자료_템플릿.html',en:'New Client',ko:'신규업체 기초요청자료',sub:'약정서·EDI·통장사본 등 신규 사업장 정보 취합'}
+        ]},
+        tax:{name:'세무연계',items:[
+          {href:'소득총액신고 세무요청_탬플릿.html',en:'Income Report',ko:'소득총액신고 세무요청',sub:'근로자·개인사업자대표 소득총액신고 서류 요청'}
+        ]},
+        site:{name:'사업장',items:[
+          {href:'건강보험연말정산 분할납부안내.html',en:'Health Insurance',ko:'건강보험 분할납부 안내',sub:'건강보험 연말정산 정산보험료 분할납부 안내'}
+        ]},
+        etc:{name:'기타',items:[
+          {href:'담당자 휴가안내_템플릿.html',en:'Vacation Notice',ko:'담당자 휴가 안내',sub:'담당자 부재기간·업무 복귀일 자동 안내'}
+        ]}
+      }
+    };
+    const drillClosers=[];
+    document.querySelectorAll('.section').forEach(sec=>{
+        const grid=sec.querySelector('.cat-grid'), panel=sec.querySelector('.cat-panel'), data=DRILL[sec.id];
+        if(!grid||!panel||!data) return;
+        const cards=panel.querySelector('.cat-cards'), title=panel.querySelector('.cat-title');
+        const tiles=grid.querySelectorAll('.cat-tile');
+        let activeKey=null;
+        const close=()=>{ activeKey=null; tiles.forEach(t=>t.classList.remove('active')); panel.hidden=true; };
+        const open=(key)=>{
+            if(activeKey===key){ close(); return; }              // 같은 타일 재클릭 → 접기
+            const c=data[key]; if(!c) return;
+            activeKey=key;
+            tiles.forEach(t=>t.classList.toggle('active', t.dataset.cat===key));
+            title.textContent=c.name;
+            cards.className='cat-cards card-grid '+(c.items.length>1?'cols-2':'single');
+            cards.innerHTML=c.items.map(it=>'<a class="card" href="'+it.href+'"><span class="en">'+it.en+'</span><span class="ko">'+it.ko+'</span><span class="sub">'+it.sub+'</span></a>').join('');
+            panel.hidden=false;
+        };
+        tiles.forEach(t=>t.addEventListener('click',()=>open(t.dataset.cat)));
+        drillClosers.push(close);
+    });
+    function closeCat(){ drillClosers.forEach(fn=>fn()); }
+
+    window.addEventListener('resize',render);
+    render();
+</script>
 </body>
 </html>
