@@ -4,21 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>임신기 근로시간 단축 대상기간 계산기</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px; color: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; }
+        body { background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; padding: 24px 20px; color: #333; }
+        .app-header { position: relative; width: 100%; max-width: 1100px; margin: 2px auto 18px; text-align: center; padding: 12px 8px; }
+        .app-header .back { position: absolute; left: 0; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; background: #fff; color: #2f6bff; text-decoration: none; font-size: 13px; font-weight: bold; padding: 8px 15px; border-radius: 100px; border: 1px solid #e6eef8; box-shadow: 0 4px 14px rgba(30,70,150,0.10); transition: all .18s; }
+        .app-header .back:hover { background: #2f6bff; color: #fff; border-color: #2f6bff; }
+        .app-header .ttl { position: relative; }
+        .app-header .ttl h1 { display: inline-block; position: relative; margin: 0; color: #2f6bff; font-size: clamp(20px,2.4vw,28px); font-weight: 800; letter-spacing: -0.8px; }
+        .app-header .ttl h1 .crumb { position: absolute; top: 50%; right: calc(100% + 14px); transform: translateY(-50%); white-space: nowrap; font-size: 0.72em; font-weight: 700; color: #5b6b86; letter-spacing: -0.2px; }
 
-        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #cfd8dc; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header { background-color: #0d47a1; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; }
+        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #e6eef8; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 34px rgba(30,70,150,0.10); }
+        .header { background-color: #2f6bff; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; }
         .content-body { padding: 30px; }
 
-        .group-title { font-size: 15px; font-weight: bold; color: #0d47a1; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .group-title span.num { background: #0d47a1; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .group-title { font-size: 15px; font-weight: bold; color: #2f6bff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .group-title span.num { background: #2f6bff; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
 
         /* 안내(법령) 박스 */
-        .notice-box { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #0d47a1; border-radius: 4px; padding: 16px 20px; margin-bottom: 25px; font-size: 13px; line-height: 1.65; color: #37474f; }
-        .notice-box b { color: #0d47a1; }
-        .notice-box .n-title { font-weight: bold; color: #0d47a1; display: block; margin-bottom: 4px; }
+        .notice-box { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #2f6bff; border-radius: 4px; padding: 16px 20px; margin-bottom: 25px; font-size: 13px; line-height: 1.65; color: #37474f; }
+        .notice-box b { color: #2f6bff; }
+        .notice-box .n-title { font-weight: bold; color: #2f6bff; display: block; margin-bottom: 4px; }
         .notice-box .n-sub { margin-top: 10px; }
 
         /* 입력 영역 */
@@ -29,28 +36,28 @@
         .date-row input.year { width: 78px; }
         .date-row input.month, .date-row input.day { width: 58px; }
         .lmp-info { font-size: 13px; color: #607d8b; }
-        .lmp-info b { color: #0d47a1; font-size: 14px; }
+        .lmp-info b { color: #2f6bff; font-size: 14px; }
 
         /* 결과 카드 2종 */
         .result-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }
-        .result-card { border: 2px solid #0d47a1; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 16px rgba(13,71,161,0.14); }
-        .result-card .rc-head { background: #0d47a1; color: #fff; font-weight: bold; font-size: 16px; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; }
-        .result-card .rc-head .tag { font-size: 12px; background: #fff; color: #0d47a1; padding: 3px 11px; border-radius: 12px; font-weight: bold; }
+        .result-card { border: 2px solid #2f6bff; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 16px rgba(13,71,161,0.14); }
+        .result-card .rc-head { background: #2f6bff; color: #fff; font-weight: bold; font-size: 16px; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .result-card .rc-head .tag { font-size: 12px; background: #fff; color: #2f6bff; padding: 3px 11px; border-radius: 12px; font-weight: bold; }
         .result-card .rc-body { padding: 22px 16px 20px; text-align: center; background: #f2f7ff; }
         .result-card .rc-range { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
-        .result-card .rc-range .d { font-size: 20px; font-weight: 800; color: #0d47a1; background: #fff; border: 1.5px solid #90caf9; border-radius: 8px; padding: 9px 15px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .result-card .rc-range .d { font-size: 20px; font-weight: 800; color: #2f6bff; background: #fff; border: 1.5px solid #90caf9; border-radius: 8px; padding: 9px 15px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .result-card .rc-range .tilde { color: #546e7a; font-size: 18px; font-weight: bold; }
         .result-card .rc-note { font-size: 13px; color: #37474f; margin-top: 14px; font-weight: 600; }
         .result-card.empty .rc-body { background: #fafbfc; }
         .result-card.empty .rc-range { display: block; color: #b0bec5; font-size: 15px; font-weight: normal; }
 
         /* 전체 40주 표 */
-        .toggle-table-btn { background: #1565c0; color: white; border: none; padding: 9px 18px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; margin: 20px 0 12px; }
-        .toggle-table-btn:hover { background: #0d47a1; }
+        .toggle-table-btn { background: #2f6bff; color: white; border: none; padding: 9px 18px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; margin: 20px 0 12px; }
+        .toggle-table-btn:hover { background: #1b4dd1; }
         table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: center; margin-bottom: 10px; }
         th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 4px; font-weight: bold; color: #1e293b; }
         td { border: 1px solid #cbd5e1; padding: 6px 4px; background: white; }
-        tr.eligible td { background: #e0f2fe; color: #0d47a1; font-weight: bold; }
+        tr.eligible td { background: #e0f2fe; color: #2f6bff; font-weight: bold; }
         .table-scroll { display: none; max-height: 460px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 4px; }
         .table-scroll.show { display: block; }
         .table-scroll table { margin: 0; }
@@ -67,8 +74,11 @@
     </style>
 </head>
 <body>
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">계산기 ›</span>임신기 근로시간단축</h1></div>
+    </header>
     <div class="wrapper">
-        <div class="header">임신기 근로시간 단축 대상기간 계산기</div>
         <div class="content-body">
 
             <div class="notice-box">
