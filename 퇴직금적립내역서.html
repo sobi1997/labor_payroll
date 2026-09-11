@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>퇴직금적립내역서</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px; color: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; }
+        body { background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; padding: 24px 20px; color: #333; }
+        .app-header { position: relative; width: 100%; max-width: 1100px; margin: 2px auto 18px; text-align: center; padding: 12px 8px; }
+        .app-header .back { position: absolute; left: 0; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; background: #fff; color: #2f6bff; text-decoration: none; font-size: 13px; font-weight: bold; padding: 8px 15px; border-radius: 100px; border: 1px solid #e6eef8; box-shadow: 0 4px 14px rgba(30,70,150,0.10); transition: all .18s; }
+        .app-header .back:hover { background: #2f6bff; color: #fff; border-color: #2f6bff; }
+        .app-header .ttl { position: relative; }
+        .app-header .ttl h1 { display: inline-block; position: relative; margin: 0; color: #2f6bff; font-size: clamp(20px,2.4vw,28px); font-weight: 800; letter-spacing: -0.8px; }
+        .app-header .ttl h1 .crumb { position: absolute; top: 50%; right: calc(100% + 14px); transform: translateY(-50%); white-space: nowrap; font-size: 0.72em; font-weight: 700; color: #5b6b86; letter-spacing: -0.2px; }
         
-        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #cfd8dc; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header { background-color: #0d47a1; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; }
+        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #e6eef8; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 34px rgba(30,70,150,0.10); }
+        .header { background-color: #2f6bff; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; }
         .content-body { padding: 30px; }
         
-        .group-title { font-size: 15px; font-weight: bold; color: #0d47a1; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .group-title span { background: #0d47a1; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+        .group-title { font-size: 15px; font-weight: bold; color: #2f6bff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .group-title span { background: #2f6bff; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 
         /* 가입자 정보 영역 */
         #workerInfoArea { background: #fafafa; border: 1px solid #e0e0e0; padding: 25px; margin-bottom: 25px; border-radius: 4px; }
@@ -41,7 +48,7 @@
 
         /* 블루 프리셋 툴바 라인 */
         .range-select-line { background: #e3f2fd; padding: 15px; border: 1px solid #90caf9; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; font-size: 14px; }
-        .range-select-line label { font-weight: bold; color: #0d47a1; }
+        .range-select-line label { font-weight: bold; color: #2f6bff; }
         .range-select-line select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 3px; background: #fff; font-weight: bold; color: #333; }
         
         .manual-date-group { display: none; align-items: center; gap: 10px; background: #ffffff; padding: 6px 12px; border: 1px solid #90caf9; border-radius: 4px; }
@@ -62,10 +69,10 @@
 
         .view-mode-toggle { display: flex; align-items: center; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 6px; border: 1px solid #cbd5e1; }
         .view-mode-toggle button { padding: 6px 14px; border: none; background: transparent; font-size: 13px; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
-        .view-mode-toggle button.active { background: #0d47a1; color: white; }
+        .view-mode-toggle button.active { background: #2f6bff; color: white; }
         
-        .btn-toggle-fold { background: #1565c0; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; display: none; }
-        .btn-toggle-fold:hover { background: #0d47a1; }
+        .btn-toggle-fold { background: #2f6bff; color: white; border: none; padding: 6px 14px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; display: none; }
+        .btn-toggle-fold:hover { background: #2f6bff; }
 
         /* 테이블 구조 */
         table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px; text-align: center; }
@@ -84,7 +91,7 @@
         .readonly { background-color: #e0f2fe !important; border: 1px solid #7dd3fc !important; color: #1e40af !important; font-weight: bold; outline: none; border-radius: 3px; }
 
         /* 하단 결과판 레이아웃 */
-        .bottom-flex-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 15px; border-top: 2px solid #0d47a1; padding-top: 25px; }
+        .bottom-flex-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 15px; border-top: 2px solid #2f6bff; padding-top: 25px; }
         .result-column { display: flex; flex-direction: column; gap: 12px; }
         .result-row { display: flex; align-items: center; height: 35px; }
         .result-row label { width: 140px; font-weight: bold; font-size: 14px; color: #475569; }
@@ -98,14 +105,17 @@
         .action-buttons { display: flex; gap: 15px; margin-top: 35px; justify-content: center; border-top: 1px solid #e2e8f0; padding-top: 24px; }
         .btn-action { padding: 13px 40px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 15px; border-radius: 4px; }
         .btn-action:hover { filter: brightness(90%); }
-        .btn-calc { background-color: #0d47a1; }
+        .btn-calc { background-color: #2f6bff; }
         .btn-reset { background-color: #64748b; }
     </style>
 </head>
 <body>
 
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">계산기 ›</span>퇴직금 적립 내역서</h1></div>
+    </header>
     <div class="wrapper">
-        <div class="header">퇴직금적립내역서</div>
 
         <div class="content-body">
             
@@ -183,7 +193,7 @@
 
                     <div id="manualDateGroup" class="manual-date-group">
                         <div class="date-row">
-                            <span style="font-weight:bold; color:#0d47a1; margin-right:5px;">시작:</span>
+                            <span style="font-weight:bold; color:#2f6bff; margin-right:5px;">시작:</span>
                             <input type="text" id="customStartYear" class="year editable" maxlength="4" placeholder="0000" oninput="dateInputChanged()" onblur="normalizeDateInput(this, 'year')"> 년
                             <input type="text" id="customStartMonth" class="month editable" maxlength="2" placeholder="00" oninput="dateInputChanged()" onblur="normalizeDateInput(this, 'month')"> 월
                         </div>
@@ -198,7 +208,7 @@
             </div>
 
             <div class="excel-paste-area">
-                <div class="group-title" style="color:#1565c0;"><span style="background:#1565c0;">✓</span> 엑셀 데이터 붙여넣기</div>
+                <div class="group-title" style="color:#2f6bff;"><span style="background:#2f6bff;">✓</span> 엑셀 데이터 붙여넣기</div>
                 <p style="font-size:12px; color:#546e7a; margin-bottom:8px;">💡 아이페이 지급년월과 기준급액 표만을 복사 붙여넣으세요 (셀 구분용 탭 공백을 자동인식)</p>
                 <textarea id="excelInput" class="excel-textarea editable" placeholder="2026-01	2,156,880" oninput="parseExcelData()"></textarea>
             </div>

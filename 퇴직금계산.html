@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>퇴직금 계산기</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px; color: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; }
+        body { background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; padding: 24px 20px; color: #333; }
+        .app-header { position: relative; width: 100%; max-width: 1100px; margin: 2px auto 18px; text-align: center; padding: 12px 8px; }
+        .app-header .back { position: absolute; left: 0; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; background: #fff; color: #2f6bff; text-decoration: none; font-size: 13px; font-weight: bold; padding: 8px 15px; border-radius: 100px; border: 1px solid #e6eef8; box-shadow: 0 4px 14px rgba(30,70,150,0.10); transition: all .18s; }
+        .app-header .back:hover { background: #2f6bff; color: #fff; border-color: #2f6bff; }
+        .app-header .ttl { position: relative; }
+        .app-header .ttl h1 { display: inline-block; position: relative; margin: 0; color: #2f6bff; font-size: clamp(20px,2.4vw,28px); font-weight: 800; letter-spacing: -0.8px; }
+        .app-header .ttl h1 .crumb { position: absolute; top: 50%; right: calc(100% + 14px); transform: translateY(-50%); white-space: nowrap; font-size: 0.72em; font-weight: 700; color: #5b6b86; letter-spacing: -0.2px; }
         
-        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #cfd8dc; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header { background-color: #0d47a1; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .wrapper { max-width: 1100px; margin: 0 auto; background: white; border: 1px solid #e6eef8; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 34px rgba(30,70,150,0.10); }
+        .header { background-color: #2f6bff; color: white; padding: 18px 24px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .content-body { padding: 30px; }
         
-        .group-title { font-size: 15px; font-weight: bold; color: #0d47a1; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .group-title span { background: #0d47a1; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+        .group-title { font-size: 15px; font-weight: bold; color: #2f6bff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .group-title span { background: #2f6bff; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 
         /* 인적정보 선택 입력 바 */
         .info-toggle-bar { background: #f8fafc; padding: 12px 20px; border: 1px solid #cbd5e1; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; color: #1e40af; }
@@ -65,7 +72,7 @@
         
         td input.base-wage, td input.etc-wage { width: 85%; padding: 6px; text-align: right; font-size: 13px; color: #333; }
 
-        .bottom-flex-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 15px; border-top: 2px solid #0d47a1; padding-top: 25px; }
+        .bottom-flex-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 15px; border-top: 2px solid #2f6bff; padding-top: 25px; }
         .result-column { display: flex; flex-direction: column; gap: 12px; }
         
         .result-row { display: flex; align-items: center; height: 35px; }
@@ -89,16 +96,16 @@
         .modal-header { background: #f8fafc; padding: 15px; font-size: 15px; font-weight: bold; text-align: center; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 20px; }
         .modal-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-        .btn-blue-sm { background-color: #1565c0; color: white; border: none; padding: 6px 14px; font-size: 12px; cursor: pointer; font-weight: bold; border-radius: 2px; }
+        .btn-blue-sm { background-color: #2f6bff; color: white; border: none; padding: 6px 14px; font-size: 12px; cursor: pointer; font-weight: bold; border-radius: 2px; }
         .btn-row-del { background: none; border: none; color: #ef4444; font-size: 18px; font-weight: bold; cursor: pointer; padding: 2px 8px; }
         .modal-footer { text-align: center; padding: 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
-        .btn-modal-confirm { background: #0d47a1; color: white; border: none; border-radius: 20px; padding: 10px 50px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-modal-confirm { background: #2f6bff; color: white; border: none; border-radius: 20px; padding: 10px 50px; font-weight: bold; cursor: pointer; font-size: 14px; }
         
         .custom-flatpickr-input { width: 100%; padding: 6px; font-size: 13px; text-align: center; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; background-color: #fffde7; cursor: pointer; color: #333; }
 
         /* 고급 블루 캘린더 테마 오버라이딩 세팅락 */
         .flatpickr-calendar { border: 1px solid #cfd8dc !important; box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important; width: 315px !important; border-radius: 4px !important; overflow: hidden; z-index: 99999 !important; }
-        .flatpickr-months { background-color: #0d47a1 !important; height: 46px !important; display: flex; align-items: center; }
+        .flatpickr-months { background-color: #2f6bff !important; height: 46px !important; display: flex; align-items: center; }
         .flatpickr-months .flatpickr-month { color: white !important; fill: white !important; height: 46px !important; }
         .flatpickr-current-month { padding: 0 !important; font-size: 14px !important; color: white !important; font-weight: bold !important; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .flatpickr-current-month .flatpickr-monthDropdown-months { font-size: 14px !important; font-weight: bold !important; color: white !important; background: transparent; padding: 2px 6px; border: none; }
@@ -112,15 +119,18 @@
         .dayContainer { width: 315px !important; min-width: 315px !important; max-width: 315px !important; box-sizing: border-box; }
         .flatpickr-day { font-size: 13px !important; color: #333 !important; max-width: 45px !important; height: 38px !important; line-height: 36px !important; border: 1px solid #f1f5f9 !important; margin: 0 !important; border-radius: 0 !important; box-sizing: border-box; }
         .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #bac3d1 !important; background: #fafafa; }
-        .flatpickr-day:hover { background: #e0f2fe !important; border-color: #bae6fd !important; color: #0d47a1 !important; }
-        .flatpickr-day.selected, .flatpickr-day.selected:hover { background-color: #0d47a1 !important; border-color: #0d47a1 !important; color: white !important; font-weight: bold; }
+        .flatpickr-day:hover { background: #e0f2fe !important; border-color: #bae6fd !important; color: #2f6bff !important; }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover { background-color: #2f6bff !important; border-color: #2f6bff !important; color: white !important; font-weight: bold; }
         .flatpickr-day.today { border-color: #ffb74d !important; font-weight: bold; color: #e65100 !important; }
     </style>
 </head>
 <body>
 
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">계산기 ›</span>퇴직금 계산기</h1></div>
+    </header>
     <div class="wrapper">
-        <div class="header">퇴직금 계산 (퇴직금제도, 퇴직연금DB형)</div>
 
         <div class="content-body">
             <div class="info-toggle-bar">
@@ -250,7 +260,7 @@
     <div class="modal-overlay" id="unincluded-modal">
         <div class="modal-box">
             <div class="modal-header">
-                <div style="font-weight: bold; color:#0d47a1;">제외일자(미산입기간) 설정</div>
+                <div style="font-weight: bold; color:#2f6bff;">제외일자(미산입기간) 설정</div>
                 <div style="cursor:pointer; font-size: 18px;" onclick="closeModal()">✕</div>
             </div>
             <div class="modal-body">

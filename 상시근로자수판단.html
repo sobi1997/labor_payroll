@@ -4,20 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상시근로자 수 산정 계산기</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px; color: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; }
+        body { background: radial-gradient(1100px 460px at 82% -8%, #e2ebff 0%, transparent 62%), radial-gradient(900px 420px at -5% 108%, #dcf5ec 0%, transparent 60%), linear-gradient(180deg,#eef3fb 0%,#f5f8fd 100%); background-attachment: fixed; padding: 24px 20px; color: #333; }
+        .app-header { position: relative; width: 100%; max-width: 1100px; margin: 2px auto 18px; text-align: center; padding: 12px 8px; }
+        .app-header .back { position: absolute; left: 0; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; background: #fff; color: #2f6bff; text-decoration: none; font-size: 13px; font-weight: bold; padding: 8px 15px; border-radius: 100px; border: 1px solid #e6eef8; box-shadow: 0 4px 14px rgba(30,70,150,0.10); transition: all .18s; }
+        .app-header .back:hover { background: #2f6bff; color: #fff; border-color: #2f6bff; }
+        .app-header .ttl { position: relative; }
+        .app-header .ttl h1 { display: inline-block; position: relative; margin: 0; color: #2f6bff; font-size: clamp(20px,2.4vw,28px); font-weight: 800; letter-spacing: -0.8px; }
+        .app-header .ttl h1 .crumb { position: absolute; top: 50%; right: calc(100% + 14px); transform: translateY(-50%); white-space: nowrap; font-size: 0.72em; font-weight: 700; color: #5b6b86; letter-spacing: -0.2px; }
 
         .wrapper {
             max-width: 1100px;
             margin: 0 auto;
             background: #fff;
-            border: 1px solid #cfd8dc;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e6eef8;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 12px 34px rgba(30,70,150,0.10);
         }
 
         .header {
-            background-color: #0d47a1;
+            background-color: #2f6bff;
             color: #fff;
             padding: 18px 24px;
             font-size: 20px;
@@ -37,7 +46,7 @@
         .group-title {
             font-size: 15px;
             font-weight: bold;
-            color: #0d47a1;
+            color: #2f6bff;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -45,7 +54,7 @@
         }
 
         .group-title span {
-            background: #0d47a1;
+            background: #2f6bff;
             color: #fff;
             border-radius: 50%;
             width: 20px;
@@ -130,7 +139,7 @@
         .btn-toggle-all {
             display: block; margin: 5px auto 0 auto; padding: 2px 6px; font-size: 11px; background: #e2e8f0; border: 1px solid #cbd5e1; color: #475569; border-radius: 3px; cursor: pointer; font-weight: normal; transition: all 0.1s;
         }
-        .btn-toggle-all:hover { background: #0d47a1; color: #fff; border-color: #0d47a1; }
+        .btn-toggle-all:hover { background: #2f6bff; color: #fff; border-color: #2f6bff; }
 
         td { border: 1px solid #cbd5e1; padding: 6px 4px; background: #fff; height: 35px; }
 
@@ -139,7 +148,7 @@
         .sun-color { color: #dc2626 !important; font-weight: normal !important; }
 
         .cell-o {
-            cursor: pointer; font-weight: bold; color: #0d47a1; font-size: 16px; user-select: none; transition: background 0.1s;
+            cursor: pointer; font-weight: bold; color: #2f6bff; font-size: 16px; user-select: none; transition: background 0.1s;
         }
         .cell-o:hover { background: #f1f5f9; }
         .cell-o.checked { background: #e0f2fe; }
@@ -153,7 +162,7 @@
         .calendar-month-title {
             font-size: 16px;
             font-weight: bold;
-            color: #0d47a1;
+            color: #2f6bff;
             margin: 15px 0 8px 0;
             text-align: left;
         }
@@ -226,7 +235,7 @@
             body { background: #fff !important; padding: 0 !important; color: #000 !important; font-size: 10px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .wrapper { box-shadow: none !important; border: none !important; max-width: 100% !important; width: 100% !important; }
             .content-body { padding: 0 !important; }
-            .header, .button-area, .info-grid, .btn-toggle-all, .worker-btn-group, .company-display-right, .type-select-group { display: none !important; }
+            .app-header, .header, .button-area, .info-grid, .btn-toggle-all, .worker-btn-group, .company-display-right, .type-select-group { display: none !important; }
             .print-only-header { display: block !important; color: #000 !important; text-align: center !important; font-size: 20px !important; font-weight: bold !important; padding: 0 0 12px 0 !important; margin-bottom: 5px !important; letter-spacing: 2px; }
             .print-only-sub-info { display: block !important; width: 100% !important; margin-bottom: 12px !important; font-size: 11px !important; color: #000 !important; line-height: 1.6 !important; font-weight: bold !important; text-align: left !important; border-bottom: 1px solid #000; padding-bottom: 8px; }
             .group-title-row { margin-bottom: 4px !important; }
@@ -247,8 +256,11 @@
 </head>
 <body>
 
+    <header class="app-header">
+        <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+        <div class="ttl"><h1><span class="crumb">계산기 ›</span>상시근로자 수 계산</h1></div>
+    </header>
     <div class="wrapper">
-        <div class="header">상시 근로자 수 산정 계산기</div>
         
         <div class="print-only-header">상시 근로자 수 산정</div>
         <div class="print-only-sub-info" id="printSubInfo">
