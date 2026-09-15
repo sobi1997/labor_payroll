@@ -26,9 +26,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);-webkit-font-sm
 .btn{border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;
   padding:9px 18px;border-radius:100px;cursor:pointer;transition:.18s;white-space:nowrap;}
 .btn:hover{border-color:var(--blue);color:var(--blue);}
-.back{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#2f6bff;text-decoration:none;font-size:13px;font-weight:700;
+.nav-back{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#2f6bff;text-decoration:none;font-size:13px;font-weight:700;
   padding:8px 15px;border-radius:100px;border:1px solid #e6eef8;box-shadow:0 4px 14px rgba(30,70,150,.10);transition:.18s;white-space:nowrap;}
-.back:hover{background:#2f6bff;color:#fff;border-color:#2f6bff;}
+.nav-back:hover{background:#2f6bff;color:#fff;border-color:#2f6bff;}
 .bar .ttl .crumb{font-size:12px;font-weight:700;color:#5b6b86;letter-spacing:-.2px;margin-right:2px;}
 .btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;}
 .btn.pri:hover{background:var(--blue-deep);border-color:var(--blue-deep);color:#fff;}
@@ -127,7 +127,7 @@ table.form tr.pay td{padding-top:.6mm;padding-bottom:.6mm;line-height:1.3;}
 <!-- ================= 툴바 ================= -->
 <div class="bar">
   <div class="bar-in">
-    <a href="index.html" class="back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
+    <a href="index.html" class="nav-back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
     <div class="ttl"><span class="crumb">계산기 · 양식 ›</span>육아휴직 · 육아기 근로시간 단축 확인서<span class="tag">고용보험법 시행규칙 별지 제102호서식</span></div>
     <div class="sp"></div>
     <button class="btn pri" onclick="window.print()">인쇄 / PDF 저장</button>
