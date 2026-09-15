@@ -29,7 +29,11 @@ body{background:var(--bg);color:var(--ink);font-family:var(--ui);-webkit-font-sm
 .nav-back{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#2f6bff;text-decoration:none;font-size:13px;font-weight:700;
   padding:8px 15px;border-radius:100px;border:1px solid #e6eef8;box-shadow:0 4px 14px rgba(30,70,150,.10);transition:.18s;white-space:nowrap;}
 .nav-back:hover{background:#2f6bff;color:#fff;border-color:#2f6bff;}
-.bar .ttl .crumb{font-size:12px;font-weight:700;color:#5b6b86;letter-spacing:-.2px;margin-right:2px;}
+.bar-in{position:relative;justify-content:center;}
+.nav-back{position:absolute;left:20px;top:50%;transform:translateY(-50%);}
+.bar-right{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:10px;}
+.bar .ttl{position:relative;color:#2f6bff;justify-content:center;}
+.bar .ttl .crumb{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:700;color:#5b6b86;letter-spacing:-.2px;}
 .btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;}
 .btn.pri:hover{background:var(--blue-deep);border-color:var(--blue-deep);color:#fff;}
 
@@ -128,9 +132,8 @@ table.form tr.pay td{padding-top:.6mm;padding-bottom:.6mm;line-height:1.3;}
 <div class="bar">
   <div class="bar-in">
     <a href="index.html" class="nav-back" onclick="if(history.length>1){history.back();return false;}">‹ 이전</a>
-    <div class="ttl"><span class="crumb">계산기 · 양식 ›</span>육아휴직 · 육아기 근로시간 단축 확인서<span class="tag">고용보험법 시행규칙 별지 제102호서식</span></div>
-    <div class="sp"></div>
-    <button class="btn pri" onclick="window.print()">인쇄 / PDF 저장</button>
+    <div class="ttl"><span class="crumb">계산기 · 양식 ›</span>육아휴직 · 육아기 근로시간 단축 확인서</div>
+    <div class="bar-right"><button class="btn pri" onclick="window.print()">인쇄 / PDF 저장</button></div>
   </div>
 </div>
 
@@ -140,8 +143,8 @@ table.form tr.pay td{padding-top:.6mm;padding-bottom:.6mm;line-height:1.3;}
 
   <div class="title-row">
     <div class="kind">
-      <span class="cb on" data-k="k_leave" data-group="kind"><span class="mk">√</span></span>육아휴직<br>
-      <span class="cb" data-k="k_short" data-group="kind"><span class="mk">√</span></span>육아기 근로시간 단축
+      <span class="cb on" data-k="k_leave" data-group="kind"><span class="mk">√</span></span> 육아휴직<br>
+      <span class="cb" data-k="k_short" data-group="kind"><span class="mk">√</span></span> 육아기 근로시간 단축
     </div>
     <div class="doc">확인서</div>
   </div>
