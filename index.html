@@ -105,6 +105,8 @@
     .dropzone .dz-view{display:flex;flex-direction:column;align-items:center;gap:13px;}
     .dropzone .dz-spin{width:54px;height:54px;border:5px solid #dbe6fb;border-top-color:var(--blue);border-radius:50%;animation:lmspin .7s linear infinite;}
     @keyframes lmspin{to{transform:rotate(360deg);}}
+    #lmFrameWrap{position:fixed;inset:0;z-index:9999;background:#fff;}
+    #lmFrame{width:100%;height:100%;border:0;display:block;}
     .dropzone:hover{border-color:var(--blue);background:#fbfdff;transform:translateY(-3px);}
     .dropzone .dz-icon{width:62px;height:62px;border-radius:50%;background:rgba(47,107,255,0.09);display:flex;
         align-items:center;justify-content:center;color:var(--blue);font-size:30px;font-weight:300;}
@@ -471,8 +473,27 @@
         }
         var defView=document.getElementById('lmDefault');
         var loadView=document.getElementById('lmLoadingView');
+        var frameWrap=document.getElementById('lmFrameWrap');
+        var frame=document.getElementById('lmFrame');
+        var revealTimer=null, revealed=false;
         function showLoading(){ defView.hidden=true; loadView.hidden=false; dz.style.pointerEvents='none'; }
         function resetDz(){ loadView.hidden=true; defView.hidden=false; dz.style.pointerEvents=''; dz.classList.remove('hot'); }
+        /* 출력기를 백그라운드 iframe에서 로드 → 준비 완료되면 화면을 덮는다 */
+        function openFrame(){
+            revealed=false;
+            frame.src=TOOL;                                  /* 파일은 세션에 저장됨 → 프레임 안에서 자동 로드 */
+            revealTimer=setTimeout(revealFrame, 25000);      /* 신호가 안 와도 25초 후 강제 공개 */
+        }
+        function revealFrame(){ if(revealed) return; revealed=true; clearTimeout(revealTimer); frameWrap.hidden=false; try{ history.pushState({lmFrame:1},''); }catch(e){} }
+        function closeFrame(){ frameWrap.hidden=true; frame.src='about:blank'; clearTimeout(revealTimer); revealed=false; resetDz(); }
+        window.addEventListener('message', function(e){
+            if(e.data==='lm-shown') revealFrame();            /* 출력기 렌더 완료 → 공개 */
+            else if(e.data==='lm-back'){                       /* 출력기의 '이전' → 포털로 복귀 */
+                if(history.state&&history.state.lmFrame) history.back(); else closeFrame();
+            }
+        });
+        /* 브라우저 뒤로가기로도 출력기 오버레이를 닫는다 */
+        window.addEventListener('popstate', function(){ if(!frameWrap.hidden) closeFrame(); });
         function go(file){
             if(!file) return;
             if(!/\.(xlsx|xls)$/i.test(file.name)){ alert('엑셀(.xlsx) 파일만 올릴 수 있습니다.'); return; }
@@ -481,9 +502,9 @@
             fr.onload=function(e){
                 try{
                     sessionStorage.setItem('lmPendingFile', JSON.stringify({name:file.name, data:toBase64(e.target.result)}));
-                    location.href=TOOL;
+                    openFrame();
                 }catch(err){
-                    /* 용량이 커서 세션 저장 실패 → 출력기로 이동해 그 안에서 업로드 */
+                    /* 용량이 커서 세션 저장 실패 → 출력기 페이지로 이동해 그 안에서 업로드 */
                     console.error('세션 전달 실패, 출력기로 이동:', err);
                     location.href=TOOL;
                 }
@@ -492,7 +513,7 @@
             fr.readAsArrayBuffer(file);
         }
         /* 뒤로가기(bfcache 복원 포함)로 돌아오면 로딩 상태를 초기화한다 */
-        window.addEventListener('pageshow', resetDz);
+        window.addEventListener('pageshow', function(){ resetDz(); if(frameWrap.hidden){ frame.src='about:blank'; revealed=false; } });
         dz.addEventListener('click', function(){ fi.click(); });
         dz.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fi.click(); } });
         fi.addEventListener('change', function(e){ go(e.target.files[0]); fi.value=''; });
@@ -503,5 +524,6 @@
         ['dragover','drop'].forEach(function(ev){ window.addEventListener(ev,function(e){ e.preventDefault(); }); });
     })();
 </script>
+<div id="lmFrameWrap" hidden><iframe id="lmFrame" title="통합노무관리 출력기"></iframe></div>
 </body>
 </html>
