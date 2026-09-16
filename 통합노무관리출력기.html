@@ -1,6 +1,8 @@
 <meta charset="utf-8">
 <title>통합노무관리 출력기</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* 포털 드롭존에서 넘어온 경우: 업로드 랜딩 화면을 첫 렌더부터 숨겨 깜빡임 방지 */try{if(sessionStorage.getItem('lmPendingFile')){document.documentElement.className+=' lm-autoload';}}catch(e){}</script>
+<style>html.lm-autoload #uploadCard{display:none!important}</style>
 <style>
 /* ===== 글꼴 Pretendard Variable — 파일 안에 직접 넣어 두었다(인터넷 없이도 항상 같은 모양) =====
    Copyright (c) 2021 Kil Hyung-jin, with Reserved Font Name Pretendard.
@@ -4886,9 +4888,9 @@ function handleFile(file){
       showMain();
       if(state.dupRecords && state.dupRecords.length)
         alert(`급상여내역에 같은 사람·같은 달이 두 번 들어간 줄이 있어 마지막 줄만 사용합니다.\n\n${state.dupRecords.join('\n')}\n\n엑셀 급상여내역에서 중복된 줄을 지워 주세요.`);
-    }catch(err){ msg.className='msg err'; msg.textContent='오류: '+err.message; console.error(err); }
+    }catch(err){ document.documentElement.classList.remove('lm-autoload'); msg.className='msg err'; msg.textContent='오류: '+err.message; console.error(err); }
   };
-  fr.onerror=()=>{ msg.className='msg err'; msg.textContent='파일을 읽지 못했습니다.'; };
+  fr.onerror=()=>{ document.documentElement.classList.remove('lm-autoload'); msg.className='msg err'; msg.textContent='파일을 읽지 못했습니다.'; };
   fr.readAsArrayBuffer(file);
 }
 
@@ -4992,6 +4994,9 @@ if(setupFitChk) setupFitChk.onchange=()=>fitSetup();
     var file=new File([buf], o.name||'통합노무관리.xlsx',
       {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     handleFile(file);
-  }catch(err){ console.error('포털 자동 불러오기 실패:', err); }
+  }catch(err){
+    console.error('포털 자동 불러오기 실패:', err);
+    document.documentElement.classList.remove('lm-autoload'); /* 실패 시 업로드 화면 복구 */
+  }
 })();
 </script>
