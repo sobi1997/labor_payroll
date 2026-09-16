@@ -100,6 +100,9 @@
         box-shadow:var(--card-sh);padding:52px 30px;text-align:center;text-decoration:none;cursor:pointer;
         transition:border-color .25s,background .25s,transform .25s,box-shadow .25s;}
     .dropzone:hover .dz-icon{transform:scale(1.06);}
+    .dropzone.hot{border-color:var(--blue);background:#eef4ff;transform:translateY(-3px);box-shadow:0 16px 40px rgba(47,107,255,.18);}
+    .dropzone.hot .dz-icon{transform:scale(1.12);}
+    #lmOpenEmpty:hover{color:var(--blue);}
     .dropzone:hover{border-color:var(--blue);background:#fbfdff;transform:translateY(-3px);}
     .dropzone .dz-icon{width:62px;height:62px;border-radius:50%;background:rgba(47,107,255,0.09);display:flex;
         align-items:center;justify-content:center;color:var(--blue);font-size:30px;font-weight:300;}
@@ -202,12 +205,14 @@
                 <div class="ko">통합노무관리</div>
                 <p class="desc">엑셀 파일을 올려 급여·근로조건·근로계약서를 한 번에 출력하는 공간입니다.</p>
             </div>
-            <a href="통합노무관리출력기.html" class="dropzone" id="lmDrop">
-                <div class="dz-icon">↗</div>
-                <div class="dz-main">통합노무관리 출력기 열기</div>
-                <div class="dz-sub">급여총괄표 · 급여명세서 · 근로조건 요약 · 근로계약서 &nbsp;|&nbsp; 엑셀(.xlsx) 업로드</div>
-                <div class="dz-badge">바로가기</div>
-            </a>
+            <div class="dropzone" id="lmDrop" role="button" tabindex="0" aria-label="통합노무관리 엑셀 업로드">
+                <div class="dz-icon">↑</div>
+                <div class="dz-main">통합노무관리 엑셀을 여기에 끌어다 놓으세요</div>
+                <div class="dz-sub">또는 클릭해서 파일 선택 &nbsp;|&nbsp; 급여총괄표 · 급여명세서 · 근로조건 요약 · 근로계약서 자동 출력</div>
+                <div class="dz-badge" id="lmBadge">.xlsx 업로드</div>
+            </div>
+            <input type="file" id="lmFileInput" accept=".xlsx,.xls" style="display:none">
+            <a href="통합노무관리출력기.html" id="lmOpenEmpty" style="margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none;">파일 없이 출력기 열기 ›</a>
         </section>
 
         <!-- 2. 계산기 -->
@@ -449,6 +454,49 @@
     window.addEventListener('resize',render);
     render();
     restorePortalState();
+
+    /* ===== 통합노무관리 드롭존 : 여기서 바로 엑셀 업로드 → 출력기 자동 로드 ===== */
+    (function(){
+        var dz=document.getElementById('lmDrop');
+        var fi=document.getElementById('lmFileInput');
+        var badge=document.getElementById('lmBadge');
+        if(!dz||!fi) return;
+        var TOOL='통합노무관리출력기.html';
+        function toBase64(buf){
+            var bytes=new Uint8Array(buf), CHUNK=0x8000, bin='';
+            for(var i=0;i<bytes.length;i+=CHUNK){
+                bin+=String.fromCharCode.apply(null, bytes.subarray(i,i+CHUNK));
+            }
+            return btoa(bin);
+        }
+        function go(file){
+            if(!file) return;
+            if(!/\.(xlsx|xls)$/i.test(file.name)){ badge.textContent='엑셀(.xlsx) 파일만 가능합니다'; return; }
+            badge.textContent='불러오는 중…';
+            var fr=new FileReader();
+            fr.onload=function(e){
+                try{
+                    sessionStorage.setItem('lmPendingFile', JSON.stringify({name:file.name, data:toBase64(e.target.result)}));
+                    location.href=TOOL;
+                }catch(err){
+                    /* 용량이 커서 세션 저장 실패 → 출력기로 이동해 그 안에서 업로드 */
+                    console.error('세션 전달 실패, 출력기로 이동:', err);
+                    badge.textContent='파일이 커서 출력기에서 업로드합니다…';
+                    location.href=TOOL;
+                }
+            };
+            fr.onerror=function(){ badge.textContent='파일을 읽지 못했습니다'; };
+            fr.readAsArrayBuffer(file);
+        }
+        dz.addEventListener('click', function(){ fi.click(); });
+        dz.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fi.click(); } });
+        fi.addEventListener('change', function(e){ go(e.target.files[0]); fi.value=''; });
+        ['dragover','dragenter'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.add('hot'); }); });
+        ['dragleave','dragend'].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove('hot'); }); });
+        dz.addEventListener('drop', function(e){ e.preventDefault(); e.stopPropagation(); dz.classList.remove('hot'); go(e.dataTransfer.files[0]); });
+        /* 존 밖에 실수로 떨어뜨려도 브라우저가 파일을 열어 페이지를 벗어나지 않게 막는다 */
+        ['dragover','drop'].forEach(function(ev){ window.addEventListener(ev,function(e){ e.preventDefault(); }); });
+    })();
 </script>
 </body>
 </html>

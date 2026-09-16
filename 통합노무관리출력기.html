@@ -4979,4 +4979,19 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 
 const setupFitChk=document.getElementById('setupFit');
 if(setupFitChk) setupFitChk.onchange=()=>fitSetup();
+
+/* ===== 포털 드롭존에서 넘어온 파일 자동 불러오기 ===== */
+(function(){
+  try{
+    var pend=sessionStorage.getItem('lmPendingFile');
+    if(!pend) return;
+    sessionStorage.removeItem('lmPendingFile');
+    var o=JSON.parse(pend);
+    var bin=atob(o.data), len=bin.length, buf=new Uint8Array(len);
+    for(var i=0;i<len;i++) buf[i]=bin.charCodeAt(i);
+    var file=new File([buf], o.name||'통합노무관리.xlsx',
+      {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    handleFile(file);
+  }catch(err){ console.error('포털 자동 불러오기 실패:', err); }
+})();
 </script>
