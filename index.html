@@ -208,13 +208,10 @@
             <div class="section-head">
                 <span class="en">Labor Management</span>
                 <div class="ko">통합노무관리</div>
-                <p class="desc">엑셀 파일을 올려 급여·근로조건·근로계약서를 한 번에 출력하는 공간입니다.</p>
             </div>
-            <div class="dropzone" id="lmDrop" role="button" tabindex="0" aria-label="통합노무관리 엑셀 업로드">
+            <div class="dropzone" id="lmDrop" role="button" tabindex="0" aria-label="통합노무관리 파일 업로드">
                 <div class="dz-icon">↑</div>
-                <div class="dz-main">통합노무관리 엑셀을 여기에 끌어다 놓으세요</div>
-                <div class="dz-sub">또는 클릭해서 파일 선택 &nbsp;|&nbsp; 급여총괄표 · 급여명세서 · 근로조건 요약 · 근로계약서 자동 출력</div>
-                <div class="dz-badge" id="lmBadge">.xlsx 업로드</div>
+                <div class="dz-main">통합노무관리 파일을 여기에 끌어다 놓으세요</div>
             </div>
             <input type="file" id="lmFileInput" accept=".xlsx,.xls" style="display:none">
             <div id="lmLoading" class="lm-loading" hidden><span class="lm-spin"></span><span id="lmLoadingText">통합노무관리 파일을 불러오는 중입니다…</span></div>
@@ -465,7 +462,6 @@
     (function(){
         var dz=document.getElementById('lmDrop');
         var fi=document.getElementById('lmFileInput');
-        var badge=document.getElementById('lmBadge');
         if(!dz||!fi) return;
         var TOOL='통합노무관리출력기.html';
         function toBase64(buf){
@@ -480,7 +476,7 @@
         function showLoading(txt){ if(txt) loadingText.textContent=txt; loading.hidden=false; dz.style.pointerEvents='none'; dz.style.opacity='.6'; }
         function go(file){
             if(!file) return;
-            if(!/\.(xlsx|xls)$/i.test(file.name)){ badge.textContent='엑셀(.xlsx) 파일만 가능합니다'; return; }
+            if(!/\.(xlsx|xls)$/i.test(file.name)){ alert('엑셀(.xlsx) 파일만 올릴 수 있습니다.'); return; }
             showLoading(file.name+' 불러오는 중입니다…');
             var fr=new FileReader();
             fr.onload=function(e){
@@ -494,7 +490,7 @@
                     location.href=TOOL;
                 }
             };
-            fr.onerror=function(){ loading.hidden=true; dz.style.pointerEvents=''; dz.style.opacity=''; badge.textContent='파일을 읽지 못했습니다'; };
+            fr.onerror=function(){ loading.hidden=true; dz.style.pointerEvents=''; dz.style.opacity=''; alert('파일을 읽지 못했습니다.'); };
             fr.readAsArrayBuffer(file);
         }
         dz.addEventListener('click', function(){ fi.click(); });
