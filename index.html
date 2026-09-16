@@ -103,10 +103,8 @@
     .dropzone.hot{border-color:var(--blue);background:#eef4ff;transform:translateY(-3px);box-shadow:0 16px 40px rgba(47,107,255,.18);}
     .dropzone.hot .dz-icon{transform:scale(1.12);}
     #lmOpenEmpty:hover{color:var(--blue);}
-    .lm-loading{margin-top:20px;width:100%;max-width:820px;display:flex;align-items:center;justify-content:center;gap:13px;
-        background:linear-gradient(135deg,#2f6bff,#1e50d6);color:#fff;font-weight:700;font-size:15.5px;letter-spacing:-0.2px;
-        padding:18px 26px;border-radius:16px;box-shadow:0 14px 34px rgba(47,107,255,.32);}
-    .lm-spin{width:19px;height:19px;flex:none;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:lmspin .7s linear infinite;}
+    .dropzone .dz-view{display:flex;flex-direction:column;align-items:center;gap:13px;}
+    .dropzone .dz-spin{width:54px;height:54px;border:5px solid #dbe6fb;border-top-color:var(--blue);border-radius:50%;animation:lmspin .7s linear infinite;}
     @keyframes lmspin{to{transform:rotate(360deg);}}
     .dropzone:hover{border-color:var(--blue);background:#fbfdff;transform:translateY(-3px);}
     .dropzone .dz-icon{width:62px;height:62px;border-radius:50%;background:rgba(47,107,255,0.09);display:flex;
@@ -207,11 +205,16 @@
                 <div class="ko">통합노무관리</div>
             </div>
             <div class="dropzone" id="lmDrop" role="button" tabindex="0" aria-label="통합노무관리 파일 업로드">
-                <div class="dz-icon">↑</div>
-                <div class="dz-main">통합노무관리 파일을 여기에 끌어다 놓으세요</div>
+                <div class="dz-view" id="lmDefault">
+                    <div class="dz-icon">↑</div>
+                    <div class="dz-main">통합노무관리 파일을 여기에 끌어다 놓으세요</div>
+                </div>
+                <div class="dz-view" id="lmLoadingView" hidden>
+                    <div class="dz-spin"></div>
+                    <div class="dz-main">로딩 중…</div>
+                </div>
             </div>
             <input type="file" id="lmFileInput" accept=".xlsx,.xls" style="display:none">
-            <div id="lmLoading" class="lm-loading" hidden><span class="lm-spin"></span><span id="lmLoadingText">통합노무관리 파일을 불러오는 중입니다…</span></div>
             <a href="통합노무관리출력기.html" id="lmOpenEmpty" style="margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none;">파일 없이 출력기 열기 ›</a>
         </section>
 
@@ -468,13 +471,14 @@
             }
             return btoa(bin);
         }
-        var loading=document.getElementById('lmLoading');
-        var loadingText=document.getElementById('lmLoadingText');
-        function showLoading(txt){ if(txt) loadingText.textContent=txt; loading.hidden=false; dz.style.pointerEvents='none'; dz.style.opacity='.6'; }
+        var defView=document.getElementById('lmDefault');
+        var loadView=document.getElementById('lmLoadingView');
+        function showLoading(){ defView.hidden=true; loadView.hidden=false; dz.style.pointerEvents='none'; }
+        function resetDz(){ loadView.hidden=true; defView.hidden=false; dz.style.pointerEvents=''; dz.classList.remove('hot'); }
         function go(file){
             if(!file) return;
             if(!/\.(xlsx|xls)$/i.test(file.name)){ alert('엑셀(.xlsx) 파일만 올릴 수 있습니다.'); return; }
-            showLoading(file.name+' 불러오는 중입니다…');
+            showLoading();
             var fr=new FileReader();
             fr.onload=function(e){
                 try{
@@ -483,13 +487,14 @@
                 }catch(err){
                     /* 용량이 커서 세션 저장 실패 → 출력기로 이동해 그 안에서 업로드 */
                     console.error('세션 전달 실패, 출력기로 이동:', err);
-                    loadingText.textContent='파일이 커서 출력기에서 이어서 업로드합니다…';
                     location.href=TOOL;
                 }
             };
-            fr.onerror=function(){ loading.hidden=true; dz.style.pointerEvents=''; dz.style.opacity=''; alert('파일을 읽지 못했습니다.'); };
+            fr.onerror=function(){ resetDz(); alert('파일을 읽지 못했습니다.'); };
             fr.readAsArrayBuffer(file);
         }
+        /* 뒤로가기(bfcache 복원 포함)로 돌아오면 로딩 상태를 초기화한다 */
+        window.addEventListener('pageshow', resetDz);
         dz.addEventListener('click', function(){ fi.click(); });
         dz.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fi.click(); } });
         fi.addEventListener('change', function(e){ go(e.target.files[0]); fi.value=''; });
