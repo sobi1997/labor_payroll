@@ -97,7 +97,9 @@
     /* ===== 통합노무관리 드롭존 ===== */
     .dropzone{position:relative;z-index:2;width:100%;max-width:820px;min-height:300px;display:flex;flex-direction:column;
         align-items:center;justify-content:center;gap:13px;background:#fff;border:2px dashed #b9cdf0;border-radius:20px;
-        box-shadow:var(--card-sh);padding:52px 30px;text-align:center;transition:border-color .25s,background .25s,transform .25s;}
+        box-shadow:var(--card-sh);padding:52px 30px;text-align:center;text-decoration:none;cursor:pointer;
+        transition:border-color .25s,background .25s,transform .25s,box-shadow .25s;}
+    .dropzone:hover .dz-icon{transform:scale(1.06);}
     .dropzone:hover{border-color:var(--blue);background:#fbfdff;transform:translateY(-3px);}
     .dropzone .dz-icon{width:62px;height:62px;border-radius:50%;background:rgba(47,107,255,0.09);display:flex;
         align-items:center;justify-content:center;color:var(--blue);font-size:30px;font-weight:300;}
@@ -198,14 +200,14 @@
             <div class="section-head">
                 <span class="en">Labor Management</span>
                 <div class="ko">통합노무관리</div>
-                <p class="desc">엑셀 파일을 올려 통합 노무 데이터를 관리하는 공간입니다.</p>
+                <p class="desc">엑셀 파일을 올려 급여·근로조건·근로계약서를 한 번에 출력하는 공간입니다.</p>
             </div>
-            <div class="dropzone" id="lmDrop">
-                <div class="dz-icon">＋</div>
-                <div class="dz-main">통합노무관리 파일을 여기에 끌어다 놓으세요</div>
-                <div class="dz-sub">엑셀 파일(.xlsx) 업로드 영역</div>
-                <div class="dz-badge">준비 중</div>
-            </div>
+            <a href="통합노무관리출력기.html" class="dropzone" id="lmDrop">
+                <div class="dz-icon">↗</div>
+                <div class="dz-main">통합노무관리 출력기 열기</div>
+                <div class="dz-sub">급여총괄표 · 급여명세서 · 근로조건 요약 · 근로계약서 &nbsp;|&nbsp; 엑셀(.xlsx) 업로드</div>
+                <div class="dz-badge">바로가기</div>
+            </a>
         </section>
 
         <!-- 2. 계산기 -->
