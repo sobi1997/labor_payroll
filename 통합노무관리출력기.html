@@ -1205,7 +1205,7 @@ function renderCg(){
       cntEl.title = znames.join(', ');      // 이름은 칸이 넓어지므로 툴팁으로만
     }
   }
-  if(!rows.length){ box.innerHTML=`<div class="none">${monthRows().length? '급여 0원 근로자를 제외하니 표시할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.'}</div>`; return; }
+  if(!rows.length){ box.innerHTML=`<div class="none">${!state.months.length ? '급상여내역에 데이터가 없습니다. — 근로조건 요약·근로계약서 탭은 사용할 수 있습니다.' : (monthRows().length? '급여 0원 근로자를 제외하니 표시할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.')}</div>`; return; }
   const {y,m}=ymFromSerial(state.curMonth);
   const payd=payDateFor(state.curMonth);
   const pay=activeItems(rows,PAY_ITEMS).concat(activeItems(rows,PAY_MINUS));
@@ -1602,7 +1602,7 @@ function renderSlips(){
   const one=document.querySelector('#pane-slip .slippdf'); if(one) one.textContent = sel.value ? 'PDF' : '통합';
   const rows=slipRows();
   selPos('empSel','empPos');
-  if(!rows.length){ box.innerHTML='<div class="none">데이터가 없습니다.</div>'; return (_slipDone=Promise.resolve()); }
+  if(!rows.length){ box.innerHTML=`<div class="none">${!state.months.length ? '급상여내역에 데이터가 없습니다. — 근로조건 요약·근로계약서 탭은 사용할 수 있습니다.' : '데이터가 없습니다.'}</div>`; return (_slipDone=Promise.resolve()); }
   box.innerHTML='';
   _slipDone=(async()=>{
     for(let i=0;i<rows.length;i++){
@@ -4868,6 +4868,7 @@ function fillEmpSel(){
 function refreshAll(){ fillEmpSel(); renderCg(); renderSlips(); renderSetupPicker(); renderSetup(); renderIns(); renderInsRates();
 }
 function showMain(){
+  document.documentElement.classList.remove('lm-autoload');   /* 랜딩 자동숨김 해제 → 이후 '다른 파일 열기' 정상 */
   document.getElementById('uploadCard').style.display='none';
   document.getElementById('main').style.display='';
   document.body.classList.add('loaded');          /* 상단 메뉴·유틸 줄을 보이게 */
@@ -4886,7 +4887,8 @@ function handleFile(file){
   fr.onload=e=>{ try{
       parseWorkbook(e.target.result); state.fileName=file.name;
       if(!state.company) state.company=companyFromFileName(file.name);
-      if(!state.months.length){ document.documentElement.classList.remove('lm-autoload'); msg.className='msg err'; msg.textContent='급상여내역에 데이터가 없습니다.'; lmSignalReady(); return; }
+      /* 급상여내역이 비어 있어도 근로조건 요약·근로계약서는 만들 수 있으므로 화면을 연다.
+         급여총괄표·급여명세서 탭은 각자 '급상여내역 없음'을 안내한다. */
       showMain();
       lmSignalReady();
       if(state.dupRecords && state.dupRecords.length)
