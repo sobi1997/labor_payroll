@@ -170,6 +170,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   .toolbar .opts{display:flex;align-items:flex-start;gap:20px}
   .toolbar .opts .chk{align-items:flex-start}
   .toolbar .opts .chk input{margin-top:3px}
+  /* 선택칸(글자 크기)처럼 키가 큰 항목이 섞인 줄은 가운데로 맞춘다 — 체크박스만 위로 뜨지 않게 */
+  .toolbar .opts.opts-mid{align-items:center;gap:16px}
+  .toolbar .opts.opts-mid .chk{align-items:center}
+  .toolbar .opts.opts-mid .chk input{margin-top:0}
+  .toolbar .opts.opts-mid select{font-family:inherit;font-size:13.5px}
   /* 급여명세서 조회기간 (기간별) */
   .slipRange{display:inline-flex;align-items:center;gap:6px}
   .slipRange .tilde{color:var(--uimut);font-weight:600}
@@ -267,10 +272,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   /* 부서 소계 — 전체 합계보다 한 단계 연하게 */
   .cg .dsub td{background:var(--net);font-weight:700}
   .cg tr.b0.dsub td{border-top:1.5px solid var(--slate)}
-  .cg tbody.grand-b td[colspan]{text-align:center}   /* 합계 / N명 도 부서·직위 자리처럼 가운데 */
+  /* 「합계 / N명」 라벨(줄 맨 앞 칸)만 부서·직위 자리처럼 가운데 —
+     지급합계·공제합계도 두 칸 폭이라 함께 걸리면 금액이 가운데로 가 버린다(금액은 우측정렬 유지) */
+  .cg tbody.grand-b td[colspan]:first-child{text-align:center}
 
   /* ===== 급여명세서 (10열 그리드) ===== */
-  .slip{width:210mm;min-height:297mm;box-sizing:border-box;padding:12mm 13mm;background:#fff;display:flex;flex-direction:column}
+  /* 여백 11mm = 인쇄·PDF 의 장 여백(@page portraitPage margin:11mm)과 같은 값 →
+     화면에서 보는 본문 폭(188mm)과 인쇄물이 정확히 같아진다(근로계약서도 11mm). */
+  .slip{width:210mm;min-height:297mm;box-sizing:border-box;padding:11mm;background:#fff;display:flex;flex-direction:column}
   .slip .title{text-align:center;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--navy);padding-bottom:8px;border-bottom:2px solid var(--navy);margin-bottom:0}
   .slip table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
   .slip col{width:10%}
@@ -476,8 +485,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   .ctr2 .body{table-layout:fixed;margin:.9em 0}
   .ctr2 .body td.lbl{background:#dbe4f3;text-align:center;font-weight:800;width:7em;color:#1f3a5c;
     line-height:1.35;letter-spacing:normal}
-  .ctr2 .body td.cnt{padding:.45em .8em}
-  .ctr2 .cnt .cl{margin:.16em 0}
+  /* 본문 줄 간격 — 한 줄이 길어 자동으로 두세 줄이 될 때도 엔터로 나눈 줄과 비슷하게 벌어지도록 넓힌다
+     (엔터로 나눈 줄 = line-height + .cl 위아래 여백 이라 예전에는 자동 줄바꿈 쪽만 좁아 보였다) */
+  .ctr2 .body td.cnt{padding:.45em .8em;line-height:1.75}
+  /* 줄 사이 여백을 따로 두지 않고 줄 높이(line-height)로만 간격을 준다
+     → 자동으로 넘어간 줄과 엔터로 나눈 줄의 간격이 똑같아진다 */
+  .ctr2 .cnt .cl{margin:0}
   .ctr2 .cnt b{color:#1f3a5c}
   .ctr2 .chgbox{text-align:center;font-weight:600;margin:.9em 0}
   .ctr2 .closing{text-align:center;font-weight:600;margin:.9em 0}
@@ -488,14 +501,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
   .ctr2 .fill{display:inline-block;min-width:7em;border-bottom:1px solid #4a5568}
   .ctr2 .dl{display:inline-block;border-bottom:1px solid #4a5568}
   /* 도표1(임금 세부) · 도표2(근로시간) */
-  .ctr2 .pyo{border-collapse:collapse;width:100%;margin:.4em 0}
+  .ctr2 .pyo{border-collapse:collapse;width:100%;margin:.4em 0;line-height:1.35}   /* 표 안은 예전 간격 그대로 */
   .ctr2 .pyo th,.ctr2 .pyo td{border:1px solid #4a5568;padding:.26em .5em;text-align:center;vertical-align:middle}
   .ctr2 .pyo th{background:#eef2f7;color:#1f3a5c;font-weight:700}
   .ctr2 .pyo td.amt{text-align:right}
   .ctr2 .pyo td.bg{text-align:center}
   .ctr2 .pyo td.tm{text-align:right}
   .ctr2 .pyo td.br{text-align:left}
-  .ctr2 .pyo td.bg2{text-align:center}
+  .ctr2 .pyo td.bg2{text-align:center;white-space:pre-line}   /* 엑셀에서 넣은 줄바꿈을 그대로 살린다 */
   .ctr2 .pyo tr.tot td{background:#eef3fb;color:#1f3a5c;font-weight:700}
   .ctr2 .pyo2.b8{table-layout:fixed}
   .ctr2 .pyo2.b8 td,.ctr2 .pyo2.b8 th{word-break:keep-all;overflow-wrap:anywhere}
@@ -613,6 +626,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         <select id="cgPick" class="cgpick" aria-label="급상여 선택" title="급상여내역에 있는 귀속년월·구분을 고릅니다"></select>
         <span class="grow"></span>
         <span class="opts">
+          <label class="chk" for="cgDeptPos" title="노무관리기초정보의 부서등록·직위등록 순서대로 정렬합니다. 부서는 등록 번호 순(1 본사 → 2 지점 …), 그 안에서 직위 높은 순(1이 가장 높음), 같으면 사번 순입니다. 등록에 없는 부서·직위는 뒤에 이름순으로 놓습니다.">
+            <input type="checkbox" id="cgDeptPos" checked> 부서/직위 순
+          </label>
           <label class="chk" for="cgDeptSub" title="부서별로 묶어 소계를 넣습니다(화면·PDF·Excel 모두). 부서가 하나뿐이면 전체 합계와 같아 나오지 않습니다.">
             <input type="checkbox" id="cgDeptSub" checked> 부서 소계
           </label>
@@ -669,7 +685,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         <span class="navpos" id="conPos"></span>
         <span class="hint" id="conNote"></span>
         <span class="grow"></span>
-        <span class="opts"><label class="chk" for="conOne" title="A4 한 장에 들어가도록 글자와 배율을 자동으로 줄입니다. 해제하면 원래 크기(13px)로 크게 나오고, 내용이 많으면 2장이 됩니다."><input type="checkbox" id="conOne" class="conone" checked> 1페이지 맞춤</label><label class="chk" for="conSkipOut" title="퇴사일이 적힌 근로자를 근로계약서 목록에서 뺍니다."><input type="checkbox" id="conSkipOut" class="conskipout" checked> 퇴사자 제외</label></span>
+        <span class="opts opts-mid"><label class="chk" for="conOne" title="A4 한 장에 들어가도록 글자와 배율을 자동으로 줄입니다. 해제하면 원래 크기(13px)로 크게 나오고, 내용이 많으면 2장이 됩니다."><input type="checkbox" id="conOne" class="conone" checked> 1페이지 맞춤</label><label class="chk" id="conFsWrap" for="conFs" title="계약서 글자 크기입니다. 「1페이지 맞춤」을 켜면 한 장에 맞게 자동으로 줄이므로 고를 수 없습니다."> 글자 <select id="conFs" class="confs" style="margin-left:5px" aria-label="계약서 글자 크기"><option value="11.33">8.5pt</option><option value="12">9pt</option><option value="12.67">9.5pt</option><option value="13" selected>9.75pt (기본)</option><option value="13.33">10pt</option><option value="14">10.5pt</option><option value="14.67">11pt</option><option value="16">12pt</option></select></label><label class="chk" for="conSkipOut" title="퇴사일이 적힌 근로자를 근로계약서 목록에서 뺍니다."><input type="checkbox" id="conSkipOut" class="conskipout" checked> 퇴사자 제외</label></span>
         <button class="btn ico-dl conpdf" onclick="exportContractPdf(this)" title="전원이면 모든 사람의 근로계약서를 PDF 한 파일로, 사원을 고르면 그 사람만 PDF 로 바로 저장합니다(글자 검색·복사 가능). 종이로 인쇄할 때는 Ctrl+P 를 누르세요.">통합</button>
         <button class="btn ico-dl pdfzip" onclick="exportPdfZip('conall',this)" title="사람마다 PDF 한 개로 나눠 ZIP 파일 하나로 저장합니다.">분할</button>
       </div>
@@ -756,7 +772,7 @@ const state = {
   records:[], nameIdx:{}, header:[], wageMap:{}, birthMap:{},
   persons:{}, personOrder:[], worktime:{}, contractSpec:null,
   company:'', rep:'', addr:'', payMonthRule:'익월', payDay:10, rates:{...DEFAULT_RATES},
-  months:[], curMonth:null, fileName:'', cgSkipZero:true, cgDeptSub:true, conSkipOut:true, conOnePage:true, slipMode:'month', slipFrom:null, slipTo:null,
+  months:[], curMonth:null, fileName:'', cgSkipZero:true, cgDeptSub:true, cgDeptPos:true, deptRank:{}, posRank:{}, conSkipOut:true, conOnePage:true, conFs:13, slipMode:'month', slipFrom:null, slipTo:null,
   periods:[], curKind:'',        // 급상여내역의 (귀속년월 × 구분) 목록 · 지금 고른 구분(급여/상여)
   wageOrder:[], setup:{ 휴직:[], 고정지급:null, 고정공제:null, 근태:null, 변동지급:null, 변동공제:null, 수정:[], ym:{} },
   setupPick:{},     // 근로조건 요약에서 출력할 섹션 — {시트이름:false}면 제외, 없으면 포함
@@ -796,6 +812,57 @@ function lab(name){ return (state.labelMap && state.labelMap[name]) || name; }
 /* 사번은 회사에 따라 숫자(1002)일 수도, 문자열(E001)일 수도 있다 */
 function isSabun(v){ const s=String(v==null?'':v).trim(); return s!=='' && s!=='-' && s!=='사번'; }
 function payVal(row,item){ return PAY_MINUS.includes(item)? -Math.abs(sumBy(row,item)) : sumBy(row,item); }
+
+/* ---------- 임금설정 열 위치 ----------
+   열 번호를 박아 두면 열이 하나만 늘어도 전부 어긋난다(45차~ G열 「최저임금차액」 삽입 → 한 칸씩 밀림).
+   그래서 1·2행 머리글 이름으로 찾는다. 못 찾으면 「통상시급」 위치로 밀린 칸수를 재서 예전 자리에 적용한다.
+     1행 : 통상시급 · 월소정 · 포괄(소정시간) · 기본급 · 포괄(금액) · 과세(=수당1 묶음) ·
+            비과세(=식대 묶음) · 통상임금 포함수당 · 급여액(맨 오른쪽 = 과세·비과세·합계)
+     2행 : 포괄 세부(연장~연차) · 수당1~11 의 실제 이름(운영총괄수당 등) · 식대 · 차량유지비 */
+/* 임금설정 「항목명 줄」 위치 — 47차까지는 2행, 48차~는 1·2행 사이에 「비과세 한도」 줄이
+   끼어들어 3행이다. 행 번호를 박지 않고 월급·시급·식대·연차 같은 이름이 가장 많은 줄을 고른다. */
+function wageSubRow(ws){
+  const norm=v=>String(v==null?'':v).replace(/\s+/g,'');
+  const KEY=['월급','시급','식대','차량유지비','연장','야간','휴일','휴일연장','휴일야간','연차','기본급'];
+  let best=1, bs=-1;
+  for(let r=1;r<Math.min((ws||[]).length,5);r++){
+    let sc=0;
+    ((ws[r])||[]).forEach(v=>{ const t=norm(v);
+      if(!t) return;
+      if(KEY.includes(t) || /^수당\d+$/.test(t) || /^연봉/.test(t)) sc++;
+    });
+    if(sc>bs){ bs=sc; best=r; }
+  }
+  return bs>0 ? best : 1;
+}
+function wageCols(ws){
+  const norm=v=>String(v==null?'':v).replace(/\s+/g,'');
+  const r1=((ws&&ws[0])||[]).map(norm), r2=((ws&&ws[wageSubRow(ws)])||[]);
+  const at=(arr,t)=>{ for(let i=0;i<arr.length;i++) if(arr[i]===t) return i; return -1; };
+  const last=(arr,t)=>{ let k=-1; for(let i=0;i<arr.length;i++) if(arr[i]===t) k=i; return k; };
+  const 시급=at(r1,'통상시급');
+  const off = 시급>=0 ? 시급-6 : 0;                 // 43차 기준 G열(6)에서 몇 칸 밀렸나
+  const pick=(i,old)=> i>=0 ? i : old+off;
+  const 기본급=pick(at(r1,'기본급'),14);
+  const 식대  =pick(at(r1,'비과세'),29);            // 「비과세」 묶음 머리 = 식대
+  const 합계  =pick(last(r1,'급여액'),42);          // 맨 오른쪽 「급여액」 묶음 = 과세·비과세·합계
+  const r2n=r2.map(norm);
+  /* 「급여액」 묶음 2행 — 47차~ : E 연봉(계약서표기) · F 월급 · G 시급 / 46차 이전 : E 월급 · F 시급
+     이름으로 찾으므로 열이 늘어도 따라간다. 연봉 열이 없으면 -1(연봉제 아님). */
+  const 시급열=(()=>{ const i=at(r2n,'시급'); return i>=0 ? i : 5; })();
+  const 월급열=(()=>{ const i=at(r2n,'월급'); return i>=0 ? i : 4; })();
+  const 연봉열=(()=>{ for(let i=0;i<r2n.length;i++) if(/^연봉/.test(r2n[i])) return i; return -1; })();
+  return { 사번:1, 성명:2, 구분:3, 급여액:월급열, 월급:월급열, 연봉:연봉열, 시급:시급열,
+           통상시급:pick(시급,6), 월소정:pick(at(r1,'월소정'),7),
+           시간0:pick(at(r1,'포괄'),8),             // 포괄 소정시간 6칸(연장·야간·휴일·휴일연장·휴일야간·연차)
+           기본급, 포괄0:기본급+1,                   // 포괄 금액 6칸
+           수당1:pick(at(r1,'과세'),21),            // 수당1~8
+           식대, 차량유지비:식대+1, 수당9:식대+2,      // 수당9~11
+           통상포함:pick(at(r1,'통상임금포함수당'),34),
+           과세:합계, 비과세:합계+1, 합계:합계+2, sub:r2 };
+}
+/* 임금설정 항목 이름 — 2행에 사용자가 붙인 이름(운영총괄수당 등)이 있으면 그것으로 */
+function wlab(key){ return (state.wageName && state.wageName[key]) || lab(key); }
 
 /* ---------- 엑셀 파싱 ---------- */
 /* 파일이름에서 회사명만 뽑는다 — 「전형섭주식회사_통합노무관리(2026)_41차.xlsx」 → 「전형섭주식회사」 */
@@ -908,28 +975,34 @@ function parseWorkbook(ab){
     if(ded.length){ DED_ITEMS = ded; DED_CUSTOM = ded.filter(h=>PLACEHOLDER.test(h)); }
   })();
 
-  /* 임금설정 → 통상시급/월소정/포괄시간 + 4대보험 요율
-     열 위치: B사번 C성명 D세전/세후 E급여액 G통상시급 H월소정 I~N포괄시간
-              O기본급 P~U포괄금액 V~AC수당 AD식대 AE차량유지비 AI통상임금포함수당 AQ과세 AR비과세 AS합계 */
-  state.wageMap={}; state.wageOrder=[];
+  /* 임금설정 → 통상시급/월소정/포괄시간 + 4대보험 요율 (열 위치는 wageCols 가 머리글로 찾는다) */
+  state.wageMap={}; state.wageOrder=[]; state.wageName={};
   const ws = get('임금설정');
   if(ws){
+    const W=wageCols(ws); state.wageCol=W;
+    /* 수당1~8 의 실제 이름(2행) — 「수당3」 같은 자리표시자면 쓰지 않는다 */
+    const slotName=(key,i)=>{ const s=String((W.sub||[])[i]==null?'':W.sub[i]).trim();
+      if(s && !/^수당\s*\d+$/.test(s)) state.wageName[key]=s; };
+    slotName('안전수당', W.수당1);
+    ['수당2','수당3','수당4','수당5','수당6','수당7','수당8'].forEach((k,n)=>slotName(k, W.수당1+1+n));
     for(let r=0;r<ws.length;r++){
-      const row=ws[r]||[]; const sabun=row[1];
+      const row=ws[r]||[]; const sabun=row[W.사번];
       if(!isSabun(sabun)) continue;
       state.wageOrder.push(String(sabun).trim());
+      const A=(i)=>num(row[i]);
       state.wageMap[String(sabun).trim()] = {
-        사번:String(sabun).trim(), 성명:String(row[2]==null?'':row[2]).trim(),
-        구분:String(row[3]==null?'':row[3]).trim(),           // D열 세전/세후
-        통상시급:num(row[6]), 월소정:num(row[7]),
-        시간:[8,9,10,11,12,13].map(c=>num(row[c])),
-        급여액:num(row[4]),                                   // E열
-        통상포함:num(row[34]),                                // AI열 통상임금 포함수당
-        과세:num(row[42]), 비과세:num(row[43]), 합계:num(row[44]),   // AQ·AR·AS
-        amt:{ 기본급:num(row[14]),포괄연장:num(row[15]),포괄야간:num(row[16]),포괄휴일:num(row[17]),
-              포괄휴일연장:num(row[18]),포괄휴일야간:num(row[19]),포괄연차수당:num(row[20]),안전수당:num(row[21]),
-              수당2:num(row[22]),수당3:num(row[23]),수당4:num(row[24]),수당5:num(row[25]),수당6:num(row[26]),
-              수당7:num(row[27]),수당8:num(row[28]),식대:num(row[29]),차량유지비:num(row[30]) }
+        사번:String(sabun).trim(), 성명:String(row[W.성명]==null?'':row[W.성명]).trim(),
+        구분:String(row[W.구분]==null?'':row[W.구분]).trim(),   // D열 세전/세후
+        통상시급:A(W.통상시급), 월소정:A(W.월소정),
+        시간:[0,1,2,3,4,5].map(k=>A(W.시간0+k)),
+        급여액:A(W.급여액),                                   // 월급 (47차~ F열 · 46차 이전 E열)
+        연봉: W.연봉>=0 ? A(W.연봉) : 0,                       // 47차~ 연봉(계약서표기)
+        통상포함:A(W.통상포함),
+        과세:A(W.과세), 비과세:A(W.비과세), 합계:A(W.합계),
+        amt:{ 기본급:A(W.기본급),포괄연장:A(W.포괄0),포괄야간:A(W.포괄0+1),포괄휴일:A(W.포괄0+2),
+              포괄휴일연장:A(W.포괄0+3),포괄휴일야간:A(W.포괄0+4),포괄연차수당:A(W.포괄0+5),안전수당:A(W.수당1),
+              수당2:A(W.수당1+1),수당3:A(W.수당1+2),수당4:A(W.수당1+3),수당5:A(W.수당1+4),수당6:A(W.수당1+5),
+              수당7:A(W.수당1+6),수당8:A(W.수당1+7),식대:A(W.식대),차량유지비:A(W.차량유지비) }
       };
     }
     state.rates={...DEFAULT_RATES};
@@ -1036,6 +1109,20 @@ function parseWorkbook(ab){
     if(rightOf('사업장명')) state.company=rightOf('사업장명');
     state.rep=rightOf('대표자명');
     state.addr=rightOf('소재지');
+    /* 부서등록(라벨 오른쪽 : 순번·부서명) · 직위등록(순번·직위명) → 「부서/직위 순」 정렬에 쓴다.
+       순번이 숫자인 줄까지만 읽는다(그 아래 급여변수등록 같은 다른 칸을 잘못 집지 않게).
+       직위는 1이 가장 높은 자리다. */
+    const rankOf = label => { const f=find(label), out={}; if(!f) return out;
+      for(let r=f.r; r<base.length; r++){
+        const row=base[r]||[];
+        const no=parseFloat(row[f.ci+1]);
+        if(!isFinite(no)) break;
+        const nm=String(row[f.ci+2]==null?'':row[f.ci+2]).trim();
+        if(nm) out[nm]=no;
+      }
+      return out; };
+    state.deptRank=rankOf('부서등록');
+    state.posRank =rankOf('직위등록');
     const pd = find('급여지급일');
     if(pd){
       const row=base[pd.r]||[];
@@ -1184,6 +1271,23 @@ function isZeroPay(row){
 }
 /* 급여총괄표(화면·PDF·Excel) 전용 행 — 체크박스에 따라 급여 0원 근로자를 뺀다 */
 function cgRows(){ const rows=monthRows(); return state.cgSkipZero ? rows.filter(r=>!isZeroPay(r)) : rows; }
+/* 「부서/직위 순」 정렬 — 노무관리기초정보의 부서등록·직위등록 번호 순서.
+   부서 번호 → (같으면) 직위 번호(1이 가장 높음) → 사번.
+   등록에 없는 부서·직위는 맨 뒤로 보내고 그 안에서는 이름순. */
+const cgRankDept = nm => { const v=(state.deptRank||{})[nm]; return isFinite(v)?v:9999; };
+const cgRankPos  = nm => { const v=(state.posRank ||{})[nm]; return isFinite(v)?v:9999; };
+function cgSortRows(rows, deptOf){
+  const posOf = r => String(valBy(r,'직위')||'').trim();
+  return rows.slice().sort((a,b)=>{
+    const da=deptOf(a), db=deptOf(b), ra=cgRankDept(da), rb=cgRankDept(db);
+    if(ra!==rb) return ra-rb;
+    if(da!==db) return da.localeCompare(db);
+    const pa=posOf(a), pb=posOf(b), qa=cgRankPos(pa), qb=cgRankPos(pb);
+    if(qa!==qb) return qa-qb;
+    if(pa!==pb) return pa.localeCompare(pb);
+    return String(valBy(a,'사번')).localeCompare(String(valBy(b,'사번')));
+  });
+}
 function empOf(row){
   return {
     사번:String(valBy(row,'사번')||'').trim(), 성명:String(valBy(row,'성명')||'').trim(),
@@ -1297,11 +1401,12 @@ function renderCg(){
      체크를 풀면 예전처럼 사번순으로만 나열한다(부서가 하나뿐이면 전체 합계와 같아 넣지 않는다). */
   const deptOf = r => String(valBy(r,'부서')||'').trim() || '(부서 미지정)';
   const useDept = state.cgDeptSub && new Set(rows.map(deptOf)).size > 1;
-  const list = useDept ? rows.slice().sort((a,b)=>{
+  const list = state.cgDeptPos ? cgSortRows(rows, deptOf)      // 부서등록·직위등록 순서
+      : (useDept ? rows.slice().sort((a,b)=>{
         const da=deptOf(a), db=deptOf(b);
         return da!==db ? da.localeCompare(db)
                        : String(valBy(a,'사번')).localeCompare(String(valBy(b,'사번')));
-      }) : rows;
+      }) : rows);
 
   // 각 사람
   let body='';
@@ -1341,7 +1446,7 @@ function renderCg(){
      <col> 안에서 calc 곱셈(`*1.3`)은 크롬이 무시하므로 실제 px 를 계산해 %로 넣는다.
      기준 폭은 A4 가로 인쇄영역(287mm)에서 #cgBox 안쪽 여백(6px×2)을 뺀 값 = 화면·인쇄 동일.
      좌측 2열은 고정, 지급·공제 12칸은 균등, 맨 오른쪽 합계 열만 1.3배(굵은 글씨 여유). */
-  const NET_W = 1.3, FIXW = 70;   /* 입사일(2025-09-13)이 한 줄에 들어가는 최소 폭 */
+  const NET_W = 1.45, FIXW = 70;  /* 합계 열은 십억대(1,234,567,890)까지 한 줄로 들어가게 1.45배 · FIXW는 입사일 최소 폭 */
   const TW   = 287*96/25.4 - 12;
   const unit = (TW - FIXW*2) / (PW + DW + NET_W);
   const pc   = v => (v / TW * 100).toFixed(4) + '%';
@@ -1373,12 +1478,26 @@ function fitCgCells(){
     const avail = td.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     if(!(avail>0)) return;
     const base=parseFloat(cs.fontSize);
-    meas.style.font=cs.font || `${cs.fontWeight} ${base}px ${cs.fontFamily}`;
+    /* font 단축속성은 글꼴 이름에 공백이 있으면 빈 값이라(cs.font==='') 엉뚱한 기본 글꼴로 재게 된다.
+       → 속성별로 넣는다. 표는 숫자 고정폭(tabular-nums)이라 그 설정도 함께 옮겨야 폭이 맞는다.
+       (칸 폭 clientWidth 는 확대 전 값이므로, 재는 글자도 #cgBox 바깥에 두어 확대 영향을 받지 않게 한다) */
+    meas.style.fontFamily=cs.fontFamily; meas.style.fontWeight=cs.fontWeight; meas.style.fontStyle=cs.fontStyle;
+    meas.style.fontVariantNumeric=cs.fontVariantNumeric; meas.style.letterSpacing=cs.letterSpacing;
+    meas.style.fontSize=base+'px';
     meas.textContent=txt;
     const w=meas.getBoundingClientRect().width;
-    const room = avail*maxLines*0.97;            // 줄바꿈 손실 여유
+    /* 칸 좌우 여백(2px)이 있어 그 안쪽으로 살짝 들어가는 정도는 글자가 잘리지 않는다.
+       1px만 넘어도 줄이면 천만원대까지 글자가 작아져 표가 들쭉날쭉해지므로 2px 은 그대로 둔다. */
+    const TOL = 2;
+    const room = avail*maxLines + TOL;
     if(w<=room) return;
-    const fs=Math.max(base*0.62, base*room/w);   // 너무 작아지지 않게 하한
+    let fs=Math.max(base*0.55, base*room/w);     // 너무 작아지지 않게 하한
+    /* 글꼴 폭이 크기에 정확히 비례하지 않아(힌팅) 계산값으로도 넘칠 수 있다 → 재서 조금씩 더 줄인다 */
+    meas.style.fontSize=fs.toFixed(2)+'px';
+    for(let g=0; g<8 && fs>base*0.55 && meas.getBoundingClientRect().width>room; g++){
+      fs=Math.max(base*0.55, fs-0.2);
+      meas.style.fontSize=fs.toFixed(2)+'px';
+    }
     td.style.fontSize=fs.toFixed(2)+'px';
   };
   box.querySelectorAll('td.legend').forEach(td=>{
@@ -1538,7 +1657,7 @@ function fitSlip(el, row){
     const t=document.createElement('div');
     t.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';
     const s=document.createElement('div'); s.className='slip';
-    s.style.cssText='width:calc(184mm - 2px);min-height:0;padding:0;display:block;box-sizing:border-box';  // 화면 명세서 안쪽 폭(184mm − .paper 테두리 1px×2) = 가장 좁은 폭 기준
+    s.style.cssText='width:calc(188mm - 2px);min-height:0;padding:0;display:block;box-sizing:border-box';  // 본문 폭(210mm − 여백 11mm×2) − .paper 테두리 1px×2 = 화면·인쇄·PDF 공통 중 가장 좁은 값
     s.innerHTML=html; t.appendChild(s); document.body.appendChild(t);
     return {t,s};
   }
@@ -1747,14 +1866,23 @@ function cnParseSet(cs, merges){
     if(b){ if(b!==lastB){ cur={title:b, lines:[]}; secs.push(cur); lastB=b; } }
     if(cur) cur.lines.push({c, d}); }
   const spec=secs;
-  /* 도표1 : '도표1' 셀 → 그 열(구분)/다음열(비고 템플릿) */
+  /* 도표2 셀 위치를 먼저 찾아 둔다 — 43차처럼 도표1·도표2가 같은 줄에 나란히 있으면
+     도표1 비고는 도표2 열 앞까지만 읽어야 섞이지 않는다. */
+  let p2c=-1;
+  for(let r=0;r<cs.length && p2c<0;r++){ const row=cs[r]||[];
+    for(let c=0;c<row.length;c++){ if(String(row[c]==null?'':row[c]).trim()==='도표2'){ p2c=c; break; } } }
+  /* 도표1 : '도표1' 셀 → 그 열(구분) / 오른쪽 칸들(비고 템플릿)
+     45차~ 비고가 「월 소정근로시간 총 」+「OO」+「시간(주휴수당 포함)」처럼 여러 칸에 나뉘어 있다
+     → 칸을 그대로(공백 포함) 이어 붙여야 「… 총 OO시간(주휴수당 포함)」 이 된다. */
   let pyo1=null;
   { let r0=-1, c0=-1;
     for(let r=0;r<cs.length && r0<0;r++){ const row=cs[r]||[];
       for(let c=0;c<row.length;c++){ if(String(row[c]==null?'':row[c]).trim()==='도표1'){ r0=r; c0=c; break; } } }
     if(r0>=0){ const items=[]; let hdr=null;
+      const tplEnd = (p2c>c0) ? p2c : Infinity;
       for(let r=r0+1;r<cs.length;r++){ const row=cs[r]||[];
-        const I=String(row[c0]==null?'':row[c0]).trim(), J=String(row[c0+1]==null?'':row[c0+1]).trim();
+        const I=String(row[c0]==null?'':row[c0]).trim();
+        const J=row.slice(c0+1, Math.min(tplEnd, row.length)).map(x=>x==null?'':String(x)).join('').trim();
         if(I==='도표2') break;
         if(I==='구분'){ hdr={구분:'구분', 비고:J||'비고'}; continue; }
         if(I===''){ if(items.length) break; else continue; }
@@ -1768,7 +1896,9 @@ function cnParseSet(cs, merges){
     if(r0>=0){ const blocks={A:[],B:[],C:[]}; let curr=null;
       for(let r=r0+1;r<cs.length;r++){ const row=cs[r]||[];
         const m=String(row[c0]==null?'':row[c0]).trim();
-        if(m==='A'||m==='B'||m==='C'){ curr=m; continue; }
+        /* 「A」 뿐 아니라 「A 동일형태」·「B 불러오기」·「C 직접작성」(45차~) 도 블록 머리로 본다 */
+        const mk=(/^([ABC])(\s|$)/.exec(m)||[])[1];
+        if(mk){ curr=mk; continue; }
         if(/^도표/.test(m)) break;
         if(curr) blocks[curr].push({r, cells:row}); }   // r=절대행(A1기준)
       /* 세팅 비고(B용) : 도표2 블록에서 '비고' 라벨 우측 내용 */
@@ -1804,9 +1934,12 @@ function cnParse(get, names, getM){
                                  율:  String(row[cSu+2]==null?'':row[cSu+2]).trim() } }; }
 
   const ws=get('임금설정')||[]; CDB.wage={};
-  CDB.wageSub = ws[1]||[];   // 2행 세부헤더(수당1→직책수당 등 rename 반영용)
+  CDB.wageSub = ws[wageSubRow(ws)]||[];   // 항목명 줄(47차=2행 · 48차~=3행) — 수당1→직책수당 등 rename 반영
   for(let r=0;r<ws.length;r++){ const row=ws[r]||[]; const s=String(row[1]==null?'':row[1]).trim(); if(s===''||s==='사번'||!CDB.persons[s]) continue;
-    CDB.wage[s]={ 급여액:num(row[4]), 구분:String(row[3]==null?'':row[3]).trim(), row }; }
+    const W=state.wageCol||wageCols(ws);
+    CDB.wage[s]={ 급여액:num(row[W.급여액]), 시급:num(row[W.시급]),      // 월급 · 시급
+                  연봉: W.연봉>=0 ? num(row[W.연봉]) : 0,               // 연봉(계약서표기)
+                  구분:String(row[W.구분]==null?'':row[W.구분]).trim(), row }; }
 
   /* 계약서_근로자별 : 사번 → 변경적용일 · 세팅번호 · 도표2형식(근로시간) · 비고 */
   const cw=get('계약서_근로자별')||get('근로계약서_근로자별'); CDB.change={}; CDB.emp2={};
@@ -1841,19 +1974,22 @@ function cnParse(get, names, getM){
 
 /* 도표1(임금 세부내역) : 임금설정 금액 기준(0이면 숨김) + 세팅 비고(근로시간 값으로 OO 치환)
    임금설정 열 : O(14)기본급 / P~U(15~20)포괄 / V~AC(21~28)수당1~8 / AD(29)식대 AE(30)차량유지비 / AF~AH(31~33)수당9~11 */
-const CN_PYO_ROWS=[
-  {i:14, nm:'기본급',           bg:'기본급'},
-  {i:15, nm:'포괄연장수당',      bg:'포괄연장수당'},
-  {i:16, nm:'포괄야간수당',      bg:'포괄야간수당'},
-  {i:17, nm:'포괄휴일수당',      bg:'포괄휴일수당'},
-  {i:18, nm:'포괄휴일연장수당'},
-  {i:19, nm:'포괄휴일야간수당'},
-  {i:20, nm:'연차수당',         bg:'연차수당'},
-  {i:21, nm:'수당1'},{i:22, nm:'수당2'},{i:23, nm:'수당3'},{i:24, nm:'수당4'},
-  {i:25, nm:'수당5'},{i:26, nm:'수당6'},{i:27, nm:'수당7'},{i:28, nm:'수당8'},
-  {i:29, nm:'식대'},{i:30, nm:'차량유지비'},
-  {i:31, nm:'수당9'},{i:32, nm:'수당10'},{i:33, nm:'수당11'},
-];
+/* 도표1에 넣을 임금설정 항목 — 열 위치는 wageCols 가 머리글로 찾는다(열이 늘어도 따라간다).
+   slot:true 인 줄은 임금설정 2행에 사용자가 붙인 이름(운영총괄수당 등)을 쓴다. */
+function cnPyoRows(){
+  const W=state.wageCol || wageCols(null);
+  const R=[{i:W.기본급, nm:'기본급', bg:'기본급'},
+    {i:W.포괄0,   nm:'포괄연장수당',    bg:'포괄연장수당'},
+    {i:W.포괄0+1, nm:'포괄야간수당',    bg:'포괄야간수당'},
+    {i:W.포괄0+2, nm:'포괄휴일수당',    bg:'포괄휴일수당'},
+    {i:W.포괄0+3, nm:'포괄휴일연장수당'},
+    {i:W.포괄0+4, nm:'포괄휴일야간수당'},
+    {i:W.포괄0+5, nm:'연차수당',       bg:'연차수당'}];
+  for(let k=0;k<8;k++) R.push({i:W.수당1+k, nm:'수당'+(k+1), slot:true});
+  R.push({i:W.식대, nm:'식대', slot:true}, {i:W.차량유지비, nm:'차량유지비', slot:true});
+  for(let k=0;k<3;k++) R.push({i:W.수당9+k, nm:'수당'+(9+k), slot:true});
+  return R;
+}
 /* 비고 OO 출처(근로시간) : 기본급=AN(39) 포괄연장=AP(41) 포괄야간=AQ(42) 포괄휴일=AU(46) 연차=AY(50) */
 const CN_PYO_BIGO_COL={ '기본급':39, '포괄연장수당':41, '포괄야간수당':42, '포괄휴일수당':46 };
 function cnPyoBigo(bg, tpl, t){
@@ -1861,7 +1997,9 @@ function cnPyoBigo(bg, tpl, t){
   /* 연차수당 비고 (42차 계약서_세팅 기준) : 근로시간 AY 「소정근로」 → 통상임금 1일분 / 「-」·빈칸 → 공백 */
   if(bg==='연차수당'){ const g=String(t[50+B]==null?'':t[50+B]).trim();
     return /소정/.test(g) ? '통상임금 1일분' : ''; }
-  const hv=i=>{ const s=String(t[i+B]==null?'':t[i+B]).trim(); if(s===''||s==='-') return '0'; const n=parseFloat(s.replace(/,/g,'')); return isNaN(n)?esc(s):won(n); };
+  /* 근로시간(소정근로·포괄연장·포괄야간·포괄휴일)은 엑셀 표기와 같이 소수점 첫째 자리까지 */
+  const hrs=n=>(Math.round(n*10)/10).toLocaleString('ko-KR',{minimumFractionDigits:1,maximumFractionDigits:1});
+  const hv=i=>{ const s=String(t[i+B]==null?'':t[i+B]).trim(); if(s===''||s==='-') return '0.0'; const n=parseFloat(s.replace(/,/g,'')); return isNaN(n)?esc(s):hrs(n); };
   if(CN_PYO_BIGO_COL[bg]!=null) return (tpl||'').replace('OO', hv(CN_PYO_BIGO_COL[bg]));
   return esc((tpl||'').replace('OO',''));
 }
@@ -1871,9 +2009,9 @@ function cnPyo1HTML(sb){
   const tplOf=bg=>{ const it=CDB.pyo1?CDB.pyo1.items.find(x=>x.구분===bg):null; return it?it.tpl:''; };
   const sub=CDB.wageSub||[];
   let trs='';
-  CN_PYO_ROWS.forEach(r=>{ const v=num(w.row[r.i]); if(!(v>0)) return;   // 0/빈값이면 숨김
+  cnPyoRows().forEach(r=>{ const v=num(w.row[r.i]); if(!(v>0)) return;   // 0/빈값이면 숨김
     let nm=r.nm;
-    if(r.i>=21){ const s=String(sub[r.i]==null?'':sub[r.i]).trim(); if(s) nm=s; }
+    if(r.slot){ const s=String(sub[r.i]==null?'':sub[r.i]).trim(); if(s) nm=s; }
     const bigo = r.bg ? cnPyoBigo(r.bg, tplOf(r.bg), t) : '';
     trs += `<tr><td>${esc(nm)}</td><td class="amt">${won(v)}</td><td class="bg">${bigo}</td></tr>`;
   });
@@ -1890,19 +2028,37 @@ function cnHm(v){ if(v==null||v==='') return ''; const z=x=>String(x).padStart(2
   if(typeof v==='number'){ const mins=Math.round((v%1)*1440); return z(Math.floor(mins/60)%24)+':'+z(mins%60); }
   const s=String(v).trim(); const m=s.match(/(\d{1,2}):(\d{2})/); return m?z(+m[1])+':'+m[2]:s; }
 
-/* 도표2 정적표(A/C) : 구분/시업/종업/휴게 + 비고 */
+/* 도표2 정적표(A/C) — 칸 수는 세팅 시트 머리글에 실제로 적힌 만큼 (5칸이면 5칸, 6칸으로 늘리면 6칸).
+   머리글 이름으로 칸 성격을 정한다 : 시업/종업 = 시각, 휴게 = 「시작 ~ 종료」, 비고 = 병합·근로자별 비고 */
 function cnPyo2Static(blk, ci, empBigo, merges){
   if(!blk||!blk.length) return null;
   let hi=blk.findIndex(o=>String(o.cells[ci]==null?'':o.cells[ci]).trim()==='구분'); if(hi<0) return null;
-  const hd=blk[hi].cells; const H=[ci,ci+1,ci+2,ci+3].map(c=>esc(String(hd[c]==null?'':hd[c]).trim()||''));
-  let bc=-1; for(let c=ci+4;c<hd.length;c++){ if(String(hd[c]==null?'':hd[c]).trim()==='비고'){ bc=c; break; } }
+  const hd=blk[hi].cells;
+  let lastC=ci; for(let c=ci;c<hd.length;c++){ if(String(hd[c]==null?'':hd[c]).trim()) lastC=c; }
+  const cols=[]; for(let c=ci;c<=lastC;c++) cols.push(c);
+  const H=cols.map(c=>String(hd[c]==null?'':hd[c]).trim());
+  /* 머리글(구분) 바로 위의 숫자 줄 = 칸 너비 비율(100 기준). 예: 15 15 15 25 30
+     값이 없는 칸은 남은 비율을 나눠 갖는다. 비율 줄이 없으면 예전처럼 비고 30% · 나머지 균등. */
+  let ratio=null;
+  for(let r=0;r<hi;r++){
+    const vals=cols.map(c=>{ const s=String(blk[r].cells[c]==null?'':blk[r].cells[c]).trim();
+      return s==='' ? null : (/^\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN); });
+    const nums=vals.filter(v=>typeof v==='number' && isFinite(v));
+    if(nums.length>=2 && vals.every(v=>v===null || (typeof v==='number' && isFinite(v)))){ ratio=vals; break; }
+  }
+  let bc=cols.find(c=>String(hd[c]==null?'':hd[c]).trim()==='비고');
+  if(bc==null) bc=lastC;
   const data=[];
   for(let r=hi+1;r<blk.length;r++){ const o=blk[r]; const g=String(o.cells[ci]==null?'':o.cells[ci]).trim(); if(!g) continue; data.push(o); }
   if(!data.length) return null;
   const eb=(empBigo&&String(empBigo).trim()&&String(empBigo).trim()!=='-')?String(empBigo).trim():'';
   const mgAt=absR=>{ if(bc<0||!merges) return null; for(const m of merges){ if(m.s.c<=bc&&bc<=m.e.c&&m.s.r<=absR&&absR<=m.e.r) return m; } return null; };
+  const cellHTML=(row,c,i)=>{ const h=H[i]||''; const raw=row[c]; const s=String(raw==null?'':raw).trim();
+    if(/휴게/.test(h)) return `<td class="br">${/~/.test(s)?esc(s):cnHm(raw)}</td>`;
+    if(/시업|종업|시각|시간/.test(h) && !/휴게/.test(h)) return `<td class="tm">${cnHm(raw)}</td>`;
+    return `<td>${esc(s)}</td>`; };
   let trs='';
-  data.forEach((o,k)=>{ const row=o.cells; const br=String(row[ci+3]==null?'':row[ci+3]).trim(); const brCell=/~/.test(br)?esc(br):cnHm(row[ci+3]);
+  data.forEach((o,k)=>{ const row=o.cells;
     let bg='';
     if(eb){ if(k===0) bg=`<td rowspan="${data.length}" class="bg2">${esc(eb)}</td>`; }
     else { const mg=mgAt(o.r);
@@ -1911,10 +2067,28 @@ function cnPyo2Static(blk, ci, empBigo, merges){
         let span=1; if(mg){ span=0; for(let j=k;j<data.length&&data[j].r<=mg.e.r;j++) span++; }
         bg=`<td${span>1?` rowspan="${span}"`:''} class="bg2">${esc(bv)}</td>`; }
     }
-    trs+=`<tr><td>${esc(String(row[ci]).trim())}</td><td class="tm">${cnHm(row[ci+1])}</td><td class="tm">${cnHm(row[ci+2])}</td><td class="br">${brCell}</td>${bg}</tr>`;
+    /* 비고는 「맨 끝」이 아니라 제 열 자리에 넣는다 — 비고 뒤에 열이 더 있으면 값이 그쪽으로 밀린다.
+       위 줄에서 병합으로 덮인 칸이면 bg 가 빈 문자열이라 칸을 건너뛴다. */
+    const tds=cols.map((c,i)=> c===bc ? bg : cellHTML(row,c,i)).join('');
+    trs+=`<tr>${tds}</tr>`;
   });
-  return `<table class="pyo pyo2 s5"><colgroup><col style="width:15%"><col style="width:15%"><col style="width:15%"><col style="width:25%"><col style="width:30%"></colgroup>`
-    +`<tbody><tr>${H.map(h=>`<th>${h}</th>`).join('')}<th>비고</th></tr>${trs}</tbody></table>`;
+  /* 열 너비 — 비율 줄이 있으면 그대로, 없으면 비고 30% · 나머지 균등 */
+  let cg;
+  if(ratio){
+    const sum=ratio.reduce((a,v)=>a+(v||0),0);
+    const miss=ratio.filter(v=>v==null).length;
+    const avg=(ratio.length-miss) ? sum/(ratio.length-miss) : 0;
+    /* 비어 있는 칸 : 남은 비율을 나눠 갖고, 남은 게 없으면(이미 100 이상) 적힌 칸들의 평균만큼 준다 */
+    const each=miss ? (Math.max(0,100-sum)>0 ? (100-sum)/miss : avg) : 0;
+    const w=ratio.map(v=> v==null ? each : v);
+    const tot=w.reduce((a,b)=>a+b,0)||1;
+    cg='<colgroup>'+w.map(v=>`<col style="width:${(v/tot*100).toFixed(2)}%">`).join('')+'</colgroup>';
+  } else {
+    const rest=(70/Math.max(1,cols.length-1)).toFixed(1);
+    cg='<colgroup>'+cols.map(c=> c===bc ? '<col style="width:30%">' : `<col style="width:${rest}%">`).join('')+'</colgroup>';
+  }
+  return `<table class="pyo pyo2 s5">${cg}`
+    +`<tbody><tr>${H.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>${trs}</tbody></table>`;
 }
 
 /* 도표2 B : 근로시간 시트에서 요일별 시업/종업/휴게 (전치표) */
@@ -1972,22 +2146,47 @@ function cnPyo2HTML(sb){
   return cnPyo2Static(CDB.pyo2.A, CDB.pyo2.ci, eb, CDB.pyo2.merges);
 }
 
-/* 조건(C)+내용(D) → 계약서 문구. null이면 그 줄 제외. */
+/* 조건(C)+내용(D) → 계약서 문구. null이면 그 줄 제외.
+   ★ C(조건)에 값이 있으면 그 줄은 「명령」이다 — 도표1·도표2·수식1·수식2·세전·세후1·세후2.
+     이때 D(내용)는 명령을 설명해 둔 메모라서 출력하지 않는다.
+     (예: 도표1 → '우측참조', 수식1 → '인적정보 E열 업무내용 매치', 세전 → '… 월 OO원 …')
+   C가 비었거나 '-' 이면 D를 그대로 쓴다. */
 function cnLineHTML(c, d, ctx){
-  const D=String(d==null?'':d).trim();
-  if(D && D!=='-') return esc(D);          // 내용(D) 우선 — 수식 결과 텍스트 포함
   const C=String(c==null?'':c).trim();
-  if(C==='' || C==='-') return null;
-  if(C==='도표1') return cnPyo1HTML(ctx.사번);
-  if(C==='도표2') return cnPyo2HTML(ctx.사번);
-  if(CN_IS_TABLE(C)) return null;
-  if(C==='수식1') return esc(ctx.업무);
-  if(C==='수식2') return `1. 근로계약기간은 ${ctx.시작} 부터 ${ctx.종료문}.`;
+  const D=String(d==null?'':d).trim();
   const 세후=(ctx.급여구분==='세후');
-  if(C==='세전') return 세후 ? null : `1. “乙”의 급여는 월 <b>${won(ctx.급여액)}</b>원으로 하며 세부사항은 아래와 같다.`;
-  if(C==='세후1') return 세후 ? `1. “乙”의 세금 공제 후 월급은 <b>${won(ctx.급여액)}</b>원으로 한다.` : null;
-  if(C==='세후2') return 세후 ? `세전금액은 아래와 같으며, 공제금액 변동에 따라 세전금액은 변동될 수 있다. 단, 변동된 내용은 급여자료에 따른다.` : null;
-  return null;
+  if(C && C!=='-'){
+    /* 시급제(임금설정 「시급」에 값)는 임금 구성 항목이 없다 → 도표1(임금 세부내역)을 내지 않는다 */
+    if(C==='도표1') return num(ctx.시급)>0 ? null : cnPyo1HTML(ctx.사번);
+    if(C==='도표2') return cnPyo2HTML(ctx.사번);
+    if(CN_IS_TABLE(C)) return null;
+    if(C==='수식1') return esc(ctx.업무);
+    if(C==='수식2') return `1. 근로계약기간은 ${ctx.시작} 부터 ${ctx.종료문}.`;
+    /* 임금 명령값 — 47차~ 조건 이름 : 세전/월급 · 세전/시급 · 세전/연봉/월급 · 세후1/월급 · 세후2/월급
+       (46차 이전의 「세전 · 세후1 · 세후2」도 그대로 받는다)
+         · 세전/연봉/월급 : 임금설정 D=세전 이고 연봉에 값이 있을 때. 문구의 OO 두 개 = 연봉 · 월급
+         · 세전/월급     : 세전 + 월급에 값 (연봉이 적혀 있으면 위 줄이 나오므로 이 줄은 빼서 겹치지 않게)
+         · 세전/시급     : 세전 + 시급에 값
+       문구는 내용(D)에 적어 둔 대로 쓰고 OO 자리에 금액을 앞에서부터 채운다(D가 비면 기본 문구). */
+    const key=C.replace(/\s+/g,'');
+    const 연봉=num(ctx.연봉), 월급=num(ctx.급여액), 시급=num(ctx.시급);
+    const OO=(tpl,vals,dflt)=>{ const t=String(tpl||''); if(!/OO/.test(t)) return dflt||null;
+      let i=0; return esc(t).replace(/OO/g, ()=>`<b>${won(vals[Math.min(i++, vals.length-1)])}</b>`); };
+    if(key==='세전/연봉/월급') return (!세후 && 연봉>0)
+      ? OO(D, [연봉, 월급], `1. “乙”의 급여는 연봉 <b>${won(연봉)}</b>원(월 <b>${won(월급)}</b>원)으로 하며, 세부사항은 아래와 같다.`) : null;
+    if(key==='세전/월급' || key==='세전') return (!세후 && 월급>0 && !(연봉>0))
+      ? OO(D, [월급], `1. “乙”의 급여는 월 <b>${won(월급)}</b>원으로 하며 세부사항은 아래와 같다.`) : null;
+    if(key==='세전/시급') return (!세후 && 시급>0)
+      ? OO(D, [시급], `1. “乙”의 급여는 시급 <b>${won(시급)}</b>원으로 한다.`) : null;
+    /* 세후는 실무상 월급 기준만 쓴다(세후+연봉·세후+시급 조합은 두지 않는다).
+       월급 칸이 비어 있으면 「0원」으로 찍히므로 값이 있을 때만 내보낸다. */
+    if(key==='세후1' || key==='세후1/월급') return (세후 && 월급>0)
+      ? OO(D, [월급], `1. “乙”의 세금 공제 후 월급은 <b>${won(월급)}</b>원으로 한다.`) : null;
+    if(key==='세후2' || key==='세후2/월급') return 세후
+      ? (D ? esc(D) : `세전금액은 아래와 같으며, 공제금액 변동에 따라 세전금액은 변동될 수 있다. 단, 변동된 내용은 급여자료에 따른다.`) : null;
+    /* 모르는 명령이면 내용(D)을 그대로 보여 준다 — 새 명령이 생기면 화면에서 바로 눈에 띄게 */
+  }
+  return D ? esc(D) : null;
 }
 
 /* ── 시범적 근로계약(수습·시용·인턴) : 인적정보 K:M = [구분][개월][%] ── */
@@ -2049,7 +2248,7 @@ function cnContractHTML(sb){
     : (cnIsDateVal(p.계약종료일) ? `${cnKrDate(p.계약종료일)}까지로 한다` : esc(jv));
   const 입사표시 = clean(p.입사일) ? cnKrDate(p.입사일) : CN_DATEPH;
   const ctx={ 사번:sb, 시작, 종료문, 입사표시,
-    급여액:w.급여액||0, 급여구분:w.구분||'', 업무:(업무내용&&업무내용!=='-')?업무내용:'-', 변경일 };
+    급여액:w.급여액||0, 시급:w.시급||0, 연봉:w.연봉||0, 급여구분:w.구분||'', 업무:(업무내용&&업무내용!=='-')?업무내용:'-', 변경일 };
 
   let body='';
   if(CDB.spec){
@@ -2097,9 +2296,9 @@ const cnPageDiv = sb => `<div class="contract-page paper contract ctr2" contente
    탭이 숨겨져 있으면 화면 밖 복제본으로 잰다(높이가 0으로 잡히므로). */
 function cnFitA4(el){
   if(!el) return;
-  /* 「1페이지 맞춤」을 끄면 줄이지 않는다 — 원래 크기(.ctr2 의 13px)로 크게 나오고,
+  /* 「1페이지 맞춤」을 끄면 줄이지 않는다 — 툴바에서 고른 글자 크기(기본 13px = 9.75pt)로 나오고,
      내용이 많으면 인쇄에서 자연스럽게 2장으로 넘어간다. */
-  if(!state.conOnePage){ el.style.fontSize=''; el.style.zoom=''; return; }
+  if(!state.conOnePage){ el.style.fontSize=(num(state.conFs)||13)+'px'; el.style.zoom=''; return; }
   const pageH=297*96/25.4;
   let probe=el, temp=null;
   if(!el.offsetHeight){
@@ -2110,15 +2309,30 @@ function cnFitA4(el){
   }
   probe.style.zoom=''; probe.style.fontSize='';
   const set=v=>{ probe.style.fontSize=v+'px'; void probe.offsetWidth; };
+  /* .ctr2 에는 min-height:297mm 가 걸려 있어 그대로 재면 높이가 늘 297mm 이상으로 나온다
+     → 재는 동안만 없애고 실제 본문 높이로 맞춘다. 인쇄·PDF 는 장 여백(11mm)만 쓰므로
+     본문이 인쇄영역(275mm)을 넘지 않도록 2px 여유를 둔다. */
+  const mh0=probe.style.minHeight; probe.style.minHeight='0';
+  /* 맞춰야 하는 건 「장 높이」가 아니라 「본문 높이」다 —
+     인쇄·PDF 에서는 .ctr2 의 안쪽 여백(11mm×2)이 없어지고 장 여백 11mm 가 대신 들어가므로
+     쓸 수 있는 본문 높이는 275mm 뿐이다. 장 높이(297mm)를 기준으로 축소하면 여백까지 같이
+     줄어들어 본문이 275mm 를 넘는다(줄이 많을수록 더 넘쳤다). */
+  const pcs=getComputedStyle(probe);
+  const pad=parseFloat(pcs.paddingTop)+parseFloat(pcs.paddingBottom);
+  const MAX=pageH-pad-2;                       // 본문에 쓸 수 있는 높이(275mm) − 여유 2px
+  const body=()=>probe.scrollHeight-pad;       // 지금 글자 크기에서의 본문 높이(확대 전 기준)
   let fs=13; set(fs);
-  for(let k=0;k<80 && probe.scrollHeight>pageH+2 && fs>9;k++){ fs=Math.round((fs-0.1)*10)/10; set(fs); }
+  for(let k=0;k<80 && body()>MAX && fs>9;k++){ fs=Math.round((fs-0.1)*10)/10; set(fs); }
   let z='';
-  if(probe.scrollHeight>pageH+2){
-    let zz=(pageH-2)/probe.scrollHeight;
-    for(let k=0;k<12;k++){ probe.style.zoom=zz.toFixed(5);
-      const hv=probe.getBoundingClientRect().height; if(hv<=pageH-1) break; zz*=(pageH-2)/hv; }
+  if(body()>MAX){                              // 글자를 하한(9px)까지 줄여도 넘치면 비례 축소
+    let zz=MAX/body();
+    for(let k=0;k<6;k++){ probe.style.zoom=zz.toFixed(5);
+      const vis=body()*zz;                     // 축소 뒤 실제 본문 높이
+      if(vis<=MAX+0.5) break;
+      zz*=MAX/vis; }
     z=probe.style.zoom;
   }
+  probe.style.minHeight=mh0;      // 재기용으로 없앴던 min-height 복구(화면에서 장 높이 유지)
   if(temp) temp.remove();
   el.style.fontSize=fs+'px'; el.style.zoom=z;
 }
@@ -2680,7 +2894,8 @@ function cgPrintPages(host){
     const pg=full.cloneNode(true), keep=new Set(g);
     [...pg.querySelector('table.cg').tBodies].forEach((b,i)=>{ if(!keep.has(i)) b.remove(); });
     if(pi>0){ const h=pg.querySelector('.doc-h'); if(h) h.remove(); pg.style.paddingTop='0'; }
-    if(pi<groups.length-1) pg.style.paddingBottom='0';
+    /* 아래 여백(#cgBox 6px)은 쪽 나누기 계산에 들어가 있지 않다 → 남겨 두면 마지막 장이 인쇄영역을 넘는다 */
+    pg.style.paddingBottom='0';
     host.appendChild(pg); return pg;
   });
   full.remove();
@@ -2928,10 +3143,11 @@ function exportCgXlsx(){
   /* 순서는 화면·PDF 와 같게 — 「부서 소계」가 켜져 있고 부서가 둘 이상이면 부서→사번, 아니면 사번순(cgRows 그대로) */
   const deptOf = r => String(valBy(r,'부서')||'').trim() || '(부서 미지정)';
   const byDept = state.cgDeptSub && new Set(rows.map(deptOf)).size > 1;
-  const sorted = byDept ? rows.slice().sort((a,b)=>{
-    const da=deptOf(a), db=deptOf(b);
-    return da!==db ? da.localeCompare(db) : String(valBy(a,'사번')).localeCompare(String(valBy(b,'사번')));
-  }) : rows;
+  const sorted = state.cgDeptPos ? cgSortRows(rows, deptOf)     // 화면·PDF 와 같은 「부서/직위 순」
+    : (byDept ? rows.slice().sort((a,b)=>{
+      const da=deptOf(a), db=deptOf(b);
+      return da!==db ? da.localeCompare(db) : String(valBy(a,'사번')).localeCompare(String(valBy(b,'사번')));
+    }) : rows);
 
   const aoa=[];
   aoa.push([`${y}년 ${String(m).padStart(2,'0')}월 ${curKindName()}총괄표`]);
@@ -3094,7 +3310,7 @@ function setupModel(){
       title:'임금설정', sub:'월 급여액 · 통상시급 · 포괄 소정시간 · 항목별 임금 구성',
       group,
       head:['사번','성명','세전/세후','급여액','통상시급','월소정',
-            ...tIdx.map(i=>포괄시간명[i]), ...aKey.map(lab), '과세','비과세','합계'],
+            ...tIdx.map(i=>포괄시간명[i]), ...aKey.map(wlab), '과세','비과세','합계'],
       align:['c','c','c','n','n','n',...tIdx.map(()=>'n'),...aKey.map(()=>'n'),'n','n','n'],
       rows,
       tot:[cT(`합계 ${order.length}명`), cT(''), cT(''), cW(sum(w=>w.급여액)), cT(''), cT(''),
@@ -4931,16 +5147,26 @@ document.querySelectorAll('.cgpick').forEach(sel=>{ sel.onchange=e=>{
   refreshAll(); }; });
 document.getElementById('cgSkipZero').onchange=e=>{ state.cgSkipZero=e.target.checked; renderCg(); };
 document.getElementById('cgDeptSub').onchange=e=>{ state.cgDeptSub=e.target.checked; renderCg(); };
+document.getElementById('cgDeptPos').onchange=e=>{ state.cgDeptPos=e.target.checked; renderCg(); };
 /* 퇴사자 제외 */
 document.querySelectorAll('.conskipout').forEach(cb=>{ cb.onchange=e=>{
   state.conSkipOut=e.target.checked;
   document.querySelectorAll('.conskipout').forEach(x=>{ x.checked=state.conSkipOut; });
   fillConSel(); renderContracts(); }; });
-/* 1페이지 맞춤 */
+/* 1페이지 맞춤 — 켜져 있으면 글자 크기는 자동이므로 선택을 잠근다 */
+function conFsUI(){
+  document.querySelectorAll('.confs').forEach(s=>{ s.value=String(state.conFs); s.disabled=state.conOnePage; });
+  document.querySelectorAll('#conFsWrap').forEach(w=>{ w.style.opacity=state.conOnePage?'.45':''; });
+}
 document.querySelectorAll('.conone').forEach(cb=>{ cb.onchange=e=>{
   state.conOnePage=e.target.checked;
   document.querySelectorAll('.conone').forEach(x=>{ x.checked=state.conOnePage; });
+  conFsUI(); renderContracts(); }; });
+document.querySelectorAll('.confs').forEach(s=>{ s.onchange=e=>{
+  state.conFs=num(e.target.value)||13;
+  document.querySelectorAll('.confs').forEach(x=>{ x.value=String(state.conFs); });
   renderContracts(); }; });
+conFsUI();
 document.getElementById('empSel').onchange=renderSlips;
 document.getElementById('slipMode').onchange=e=>{ state.slipMode=e.target.value; slipModeUI(); fillEmpSel(); renderSlips(); };
 ['slipFrom','slipTo'].forEach(id=>{ document.getElementById(id).onchange=e=>{
