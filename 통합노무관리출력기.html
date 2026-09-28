@@ -777,7 +777,7 @@ const 포괄시간열 = { 포괄연장:8, 포괄야간:9, 포괄휴일:10, 포�
 const state = {
   records:[], nameIdx:{}, header:[], wageMap:{}, birthMap:{},
   persons:{}, personOrder:[], worktime:{}, contractSpec:null,
-  company:'', rep:'', addr:'', payMonthRule:'익월', payDay:10, rates:{...DEFAULT_RATES},
+  company:'', rep:'', addr:'', payMonthRule:'익월', payDay:10, payLast:false, rates:{...DEFAULT_RATES},
   months:[], curMonth:null, fileName:'', cgSkipZero:true, cgDeptSub:true, cgDeptPos:true, deptRank:{}, posRank:{}, conSkipOut:true, conOnePage:true, conFs:13, slipMode:'month', slipFrom:null, slipTo:null, slipSkipZero:true,
   periods:[], curKind:'',        // 급상여내역의 (귀속년월 × 구분) 목록 · 지금 고른 구분(급여/상여)
   wageOrder:[], setup:{ 휴직:[], 고정지급:null, 고정공제:null, 근태:null, 변동지급:null, 변동공제:null, 수정:[], ym:{} },
@@ -809,7 +809,8 @@ function payDateFor(monthSerial){
   let y=d.getFullYear(), m=d.getMonth();
   if(state.payMonthRule==='익월'){ m+=1; if(m>11){m=0;y+=1;} }
   const p=x=>String(x).padStart(2,'0');
-  return y+'-'+p(m+1)+'-'+p(state.payDay);
+  const day = state.payLast ? new Date(y, m+1, 0).getDate() : state.payDay;   // 말일이면 그 달 마지막 날
+  return y+'-'+p(m+1)+'-'+p(day);
 }
 function sumBy(row, name){ const ix=state.nameIdx[name]; if(!ix) return 0; let t=0; for(const i of ix) t+=num(row[i]); return t; }
 function valBy(row, name){ const ix=state.nameIdx[name]; if(!ix) return ''; return row[ix[0]]; }
@@ -1107,7 +1108,7 @@ function parseWorkbook(ab){
 
   /* 노무관리기초정보 → 회사명·지급일 규칙 */
   const base = get('노무관리기초정보');
-  state.company=''; state.rep=''; state.addr=''; state.payMonthRule='익월'; state.payDay=10;
+  state.company=''; state.rep=''; state.addr=''; state.payMonthRule='익월'; state.payDay=10; state.payLast=false;
   if(base){
     const flat=[]; base.forEach((row,r)=>(row||[]).forEach((c,ci)=>{ if(c!=null&&c!=='') flat.push({r,ci,v:String(c).trim()}); }));
     const find = label => flat.find(x=>x.v===label);
@@ -1135,7 +1136,9 @@ function parseWorkbook(ab){
       for(let c=pd.ci+1;c<pd.ci+5;c++){
         const v=row[c]==null?'':String(row[c]).trim();
         if(v==='당월'||v==='익월') state.payMonthRule=v;
-        const dm=v.match(/(\d{1,2})\s*일?/); if(dm && +dm[1]>=1 && +dm[1]<=31) state.payDay=+dm[1];
+        if(/말일|마지막/.test(v)) state.payLast=true;          // 「당월 말일」·「익월 말일」
+        const dm=v.match(/(\d{1,2})\s*일?/);
+        if(dm && +dm[1]>=1 && +dm[1]<=31){ state.payDay=+dm[1]; state.payLast=false; }
       }
     }
   }
