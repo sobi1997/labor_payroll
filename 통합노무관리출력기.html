@@ -632,9 +632,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
           <label class="chk" for="cgDeptSub" title="부서별로 묶어 소계를 넣습니다(화면·PDF·Excel 모두). 부서가 하나뿐이면 전체 합계와 같아 나오지 않습니다.">
             <input type="checkbox" id="cgDeptSub" checked> 부서 소계
           </label>
-          <label class="chk zero" for="cgSkipZero" title="지급·공제·차인지급액이 모두 0원인 근로자를 총괄표(PDF·Excel)에서 뺍니다. 합계 금액은 달라지지 않습니다.">
+          <label class="chk zero" for="cgSkipZero" title="지급·공제·차인지급액이 모두 0원인 근로자를 총괄표(PDF·Excel)에서 뺍니다. 합계 금액은 달라지지 않습니다. 상여처럼 일부만 받는 달에 유용합니다.">
             <input type="checkbox" id="cgSkipZero" checked>
-            <span class="zl">급여 0원 근로자 제외<span class="cnt" id="cgZeroCnt"></span></span>
+            <span class="zl">0원 근로자 제외<span class="cnt" id="cgZeroCnt"></span></span>
           </label>
         </span>
         <button class="btn ico-dl" onclick="exportPdfCg(this)" title="A4 가로 PDF 로 바로 저장합니다(글자 검색·복사 가능). 종이로 인쇄할 때는 Ctrl+P 를 누르세요.">PDF</button>
@@ -656,11 +656,13 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         <button class="btn ghost nav" id="empPrev" title="이전 사원 (↑)">▲</button>
         <button class="btn ghost nav" id="empNext" title="다음 사원 (↓)">▼</button>
         <span class="navpos" id="empPos"></span>
-        <label class="chk zero" for="slipSkipZero" title="지급·공제·차인지급액이 모두 0원인 근로자는 명세서를 만들지 않습니다. 상여처럼 일부만 받는 달에 유용합니다.">
-          <input type="checkbox" id="slipSkipZero" checked>
-          <span class="zl">0원 근로자 제외<span class="cnt" id="slipZeroCnt"></span></span>
-        </label>
         <span class="grow"></span>
+        <span class="opts">
+          <label class="chk zero" for="slipSkipZero" title="지급·공제·차인지급액이 모두 0원인 근로자는 명세서를 만들지 않습니다. 상여처럼 일부만 받는 달에 유용합니다.">
+            <input type="checkbox" id="slipSkipZero" checked>
+            <span class="zl">0원 근로자 제외<span class="cnt" id="slipZeroCnt"></span></span>
+          </label>
+        </span>
         <button class="btn ico-dl slippdf" onclick="exportSlipPdf(this)" title="전원이면 화면에 나온 명세서 전부를 PDF 한 파일로, 사원을 고르면 그 사람 명세서만 PDF 로 바로 저장합니다(글자 검색·복사 가능). 종이로 인쇄할 때는 Ctrl+P 를 누르세요.">통합</button>
         <button class="btn ico-dl pdfzip" onclick="exportPdfZip('all',this)" title="사람마다 PDF 한 개(기간별이면 그 사람의 여러 달이 한 파일)로 나눠 ZIP 파일 하나로 저장합니다.">분할</button>
         <button class="btn grn ico-xls" onclick="exportSlipsXlsx()" title="명세서 한 장당 시트 하나로 Excel(.xlsx) 파일에 저장합니다.">Excel</button>
@@ -1317,7 +1319,7 @@ function renderCg(){
       cntEl.title = znames.join(', ');      // 이름은 칸이 넓어지므로 툴팁으로만
     }
   }
-  if(!rows.length){ box.innerHTML=`<div class="none">${!state.months.length ? '급상여내역에 데이터가 없습니다. — 근로조건 요약·근로계약서 탭은 사용할 수 있습니다.' : (monthRows().length? '급여 0원 근로자를 제외하니 표시할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.')}</div>`; return; }
+  if(!rows.length){ box.innerHTML=`<div class="none">${!state.months.length ? '급상여내역에 데이터가 없습니다. — 근로조건 요약·근로계약서 탭은 사용할 수 있습니다.' : (monthRows().length? '0원 근로자를 제외하니 표시할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.')}</div>`; return; }
   const {y,m}=ymFromSerial(state.curMonth);
   const payd=payDateFor(state.curMonth);
   const pay=activeItems(rows,PAY_ITEMS).concat(activeItems(rows,PAY_MINUS));
@@ -3142,7 +3144,7 @@ async function exportSlipsXlsx(){
 /* ================= Excel(.xlsx) — 급여총괄표 1인 1행 ================= */
 function exportCgXlsx(){
   const rows=cgRows();
-  if(!rows.length){ alert(monthRows().length? '급여 0원 근로자를 제외하니 저장할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.'); return; }
+  if(!rows.length){ alert(monthRows().length? '0원 근로자를 제외하니 저장할 근로자가 없습니다.' : '선택한 월의 데이터가 없습니다.'); return; }
   const {y,m}=ymFromSerial(state.curMonth); const payd=payDateFor(state.curMonth);
   const pay=activeItems(rows,PAY_ITEMS).concat(activeItems(rows,PAY_MINUS));
   const ded=activeItems(rows,DED_ITEMS);
