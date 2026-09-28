@@ -656,6 +656,10 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         <button class="btn ghost nav" id="empPrev" title="이전 사원 (↑)">▲</button>
         <button class="btn ghost nav" id="empNext" title="다음 사원 (↓)">▼</button>
         <span class="navpos" id="empPos"></span>
+        <label class="chk zero" for="slipSkipZero" title="지급·공제·차인지급액이 모두 0원인 근로자는 명세서를 만들지 않습니다. 상여처럼 일부만 받는 달에 유용합니다.">
+          <input type="checkbox" id="slipSkipZero" checked>
+          <span class="zl">0원 근로자 제외<span class="cnt" id="slipZeroCnt"></span></span>
+        </label>
         <span class="grow"></span>
         <button class="btn ico-dl slippdf" onclick="exportSlipPdf(this)" title="전원이면 화면에 나온 명세서 전부를 PDF 한 파일로, 사원을 고르면 그 사람 명세서만 PDF 로 바로 저장합니다(글자 검색·복사 가능). 종이로 인쇄할 때는 Ctrl+P 를 누르세요.">통합</button>
         <button class="btn ico-dl pdfzip" onclick="exportPdfZip('all',this)" title="사람마다 PDF 한 개(기간별이면 그 사람의 여러 달이 한 파일)로 나눠 ZIP 파일 하나로 저장합니다.">분할</button>
@@ -772,7 +776,7 @@ const state = {
   records:[], nameIdx:{}, header:[], wageMap:{}, birthMap:{},
   persons:{}, personOrder:[], worktime:{}, contractSpec:null,
   company:'', rep:'', addr:'', payMonthRule:'익월', payDay:10, rates:{...DEFAULT_RATES},
-  months:[], curMonth:null, fileName:'', cgSkipZero:true, cgDeptSub:true, cgDeptPos:true, deptRank:{}, posRank:{}, conSkipOut:true, conOnePage:true, conFs:13, slipMode:'month', slipFrom:null, slipTo:null,
+  months:[], curMonth:null, fileName:'', cgSkipZero:true, cgDeptSub:true, cgDeptPos:true, deptRank:{}, posRank:{}, conSkipOut:true, conOnePage:true, conFs:13, slipMode:'month', slipFrom:null, slipTo:null, slipSkipZero:true,
   periods:[], curKind:'',        // 급상여내역의 (귀속년월 × 구분) 목록 · 지금 고른 구분(급여/상여)
   wageOrder:[], setup:{ 휴직:[], 고정지급:null, 고정공제:null, 근태:null, 변동지급:null, 변동공제:null, 수정:[], ym:{} },
   setupPick:{},     // 근로조건 요약에서 출력할 섹션 — {시트이름:false}면 제외, 없으면 포함
@@ -1687,6 +1691,14 @@ function rowPeriod(row){
 }
 /* 조회 방식에 맞는 행 전체 — 월별: 고른 급상여 / 기간별: 조회기간 안의 급여·상여 전부 (사번 → 오래된 달 → 급여·상여) */
 function slipRowsAll(){
+  const all=slipRowsRaw();
+  const z=all.filter(isZeroPay).length;
+  const el=document.getElementById('slipZeroCnt');
+  if(el) el.textContent = z ? `(${z}장 ${state.slipSkipZero?'제외됨':'포함'})` : '(해당 없음)';
+  return state.slipSkipZero ? all.filter(r=>!isZeroPay(r)) : all;
+}
+/* 지급·공제·차인지급액이 모두 0원인 사람 제외 전의 원래 목록 */
+function slipRowsRaw(){
   if(state.slipMode!=='range') return monthRows();
   const iYm=state.nameIdx['귀속년월'][0];
   const lo=Math.min(state.slipFrom,state.slipTo), hi=Math.max(state.slipFrom,state.slipTo);
@@ -5168,6 +5180,7 @@ document.querySelectorAll('.confs').forEach(s=>{ s.onchange=e=>{
   renderContracts(); }; });
 conFsUI();
 document.getElementById('empSel').onchange=renderSlips;
+document.getElementById('slipSkipZero').onchange=e=>{ state.slipSkipZero=e.target.checked; fillEmpSel(); renderSlips(); };
 document.getElementById('slipMode').onchange=e=>{ state.slipMode=e.target.value; slipModeUI(); fillEmpSel(); renderSlips(); };
 ['slipFrom','slipTo'].forEach(id=>{ document.getElementById(id).onchange=e=>{
   state[id]=num(e.target.value); fillEmpSel(); renderSlips(); }; });
