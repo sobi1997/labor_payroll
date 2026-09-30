@@ -1480,38 +1480,56 @@ function fitCgCells(){
   const meas=document.createElement('span');
   meas.style.cssText='position:absolute;left:-9999px;top:0;white-space:pre;visibility:hidden';
   document.body.appendChild(meas);
-  const shrink=(td, maxLines)=>{
+  const shrink=(td, maxLines, floor)=>{
     td.style.fontSize=''; td.style.whiteSpace = maxLines===1 ? 'nowrap' : 'normal';
     const txt=(td.textContent||'').trim(); if(!txt) return;
     const cs=getComputedStyle(td);
     const avail = td.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     if(!(avail>0)) return;
     const base=parseFloat(cs.fontSize);
+    const FLOOR = Math.min(base, floor || base*0.55);   // 항목명은 8px, 금액칸은 종전대로
     /* font 단축속성은 글꼴 이름에 공백이 있으면 빈 값이라(cs.font==='') 엉뚱한 기본 글꼴로 재게 된다.
        → 속성별로 넣는다. 표는 숫자 고정폭(tabular-nums)이라 그 설정도 함께 옮겨야 폭이 맞는다.
        (칸 폭 clientWidth 는 확대 전 값이므로, 재는 글자도 #cgBox 바깥에 두어 확대 영향을 받지 않게 한다) */
     meas.style.fontFamily=cs.fontFamily; meas.style.fontWeight=cs.fontWeight; meas.style.fontStyle=cs.fontStyle;
     meas.style.fontVariantNumeric=cs.fontVariantNumeric; meas.style.letterSpacing=cs.letterSpacing;
     meas.style.fontSize=base+'px';
-    meas.textContent=txt;
-    const w=meas.getBoundingClientRect().width;
     /* 칸 좌우 여백(2px)이 있어 그 안쪽으로 살짝 들어가는 정도는 글자가 잘리지 않는다.
        1px만 넘어도 줄이면 천만원대까지 글자가 작아져 표가 들쭉날쭉해지므로 2px 은 그대로 둔다. */
     const TOL = 2;
-    const room = avail*maxLines + TOL;
-    if(w<=room) return;
-    let fs=Math.max(base*0.55, base*room/w);     // 너무 작아지지 않게 하한
+    const room  = avail*maxLines + TOL;
+    /* 줄바꿈 판정은 칸 안쪽 폭으로 하므로 1px만 넘어도 낱말이 쪼개진다 → 여유(TOL)를 주지 않는다 */
+    const roomW = avail - 0.5;                   // 낱말 하나는 한 줄 안에 들어가야 한다
+    /* 줄바꿈은 띄어쓰기 자리에서 일어나므로 전체 폭만 보면 안 된다.
+       「고용보험 두루누리지원금」처럼 뒷낱말이 길면 그 낱말이 또 쪼개져 3줄이 된다.
+       → 가장 긴 낱말도 한 줄에 들어가도록 함께 본다. */
+    const longest = maxLines>1 ? txt.split(/\s+/).reduce((a,b)=>a.length>=b.length?a:b,'') : txt;
+    const mw = s2 => { meas.textContent=s2; return meas.getBoundingClientRect().width; };
+    const w  = mw(txt);
+    const wl = (maxLines>1 && longest!==txt) ? mw(longest) : 0;
+    if(w<=room && wl<=roomW) return;
+    let fs=Math.max(FLOOR, base*Math.min(room/w, wl ? roomW/wl : Infinity));   // 너무 작아지지 않게 하한
     /* 글꼴 폭이 크기에 정확히 비례하지 않아(힌팅) 계산값으로도 넘칠 수 있다 → 재서 조금씩 더 줄인다 */
     meas.style.fontSize=fs.toFixed(2)+'px';
-    for(let g=0; g<8 && fs>base*0.55 && meas.getBoundingClientRect().width>room; g++){
-      fs=Math.max(base*0.55, fs-0.2);
+    for(let g=0; g<8 && fs>FLOOR && (mw(txt)>room || (wl && mw(longest)>roomW)); g++){
+      fs=Math.max(FLOOR, fs-0.2);
       meas.style.fontSize=fs.toFixed(2)+'px';
     }
     td.style.fontSize=fs.toFixed(2)+'px';
+    /* 하한까지 줄여도 한 줄에 안 들어가면 줄바꿈을 허용한다.
+       (안 그러면 글자가 칸 밖으로 삐져나가 옆 칸을 덮는다 — 화면·PDF 모두) */
+    if(maxLines===1 && mw(txt) > room) shrink(td, 2, floor);
   };
+  /* 항목명 줄 수 —
+       띄어쓰기가 없는 이름 : 9자까지 한 줄(글자를 줄여서) · 10자부터 두 줄 · 19자부터 세 줄
+       띄어쓰기가 있는 이름 : 띄어쓰기 자리에서 나누고(최대 3줄) 가장 긴 덩어리에 맞춰 글자를 줄인다
+     글자는 8px 밑으로 내리지 않는다(그보다 작아져야 하면 줄을 하나 더 쓴다). */
   box.querySelectorAll('td.legend').forEach(td=>{
     const txt=(td.textContent||'').trim();
-    shrink(td, txt.length<=6 ? 1 : 2);           // 6자까지는 한 줄, 그 이상은 두 줄까지
+    const parts=txt.split(/\s+/).filter(Boolean);
+    const maxLines = parts.length>1 ? Math.min(3, parts.length)
+                   : (txt.length<=9 ? 1 : txt.length<=18 ? 2 : 3);
+    shrink(td, maxLines, 8);
   });
   box.querySelectorAll('td.num,td.subv,td.pt1,td.pt2,td.net,td.sabun,td.lab').forEach(td=>shrink(td,1));
   meas.remove();
