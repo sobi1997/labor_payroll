@@ -2081,30 +2081,48 @@ function cnPyo2Static(blk, ci, empBigo, merges){
     const nums=vals.filter(v=>typeof v==='number' && isFinite(v));
     if(nums.length>=2 && vals.every(v=>v===null || (typeof v==='number' && isFinite(v)))){ ratio=vals; break; }
   }
+  /* 비고 열은 머리글이 「비고」인 칸만 — 없으면 비고 열 없이 그린다(예전엔 마지막 열을 비고로 봤다) */
   let bc=cols.find(c=>String(hd[c]==null?'':hd[c]).trim()==='비고');
-  if(bc==null) bc=lastC;
+  if(bc==null) bc=-1;
+  /* 엑셀 병합 — 어느 칸이든 그 칸을 덮는 병합 영역을 찾는다(가로·세로 모두) */
+  const mgAt=(absR,c)=>{ if(!merges) return null;
+    for(const m of merges){ if(m.s.c<=c && c<=m.e.c && m.s.r<=absR && absR<=m.e.r) return m; }
+    return null; };
   const data=[];
-  for(let r=hi+1;r<blk.length;r++){ const o=blk[r]; const g=String(o.cells[ci]==null?'':o.cells[ci]).trim(); if(!g) continue; data.push(o); }
+  for(let r=hi+1;r<blk.length;r++){ const o=blk[r];
+    const g=String(o.cells[ci]==null?'':o.cells[ci]).trim();
+    /* 구분 칸이 비어도 세로 병합으로 덮인 줄이면 표의 한 줄이다(엑셀은 병합하면 첫 칸에만 값이 남는다) */
+    if(!g && !mgAt(o.r, ci)) continue;
+    data.push(o); }
   if(!data.length) return null;
   const eb=(empBigo&&String(empBigo).trim()&&String(empBigo).trim()!=='-')?String(empBigo).trim():'';
-  const mgAt=absR=>{ if(bc<0||!merges) return null; for(const m of merges){ if(m.s.c<=bc&&bc<=m.e.c&&m.s.r<=absR&&absR<=m.e.r) return m; } return null; };
-  const cellHTML=(row,c,i)=>{ const h=H[i]||''; const raw=row[c]; const s=String(raw==null?'':raw).trim();
-    if(/휴게/.test(h)) return `<td class="br">${/~/.test(s)?esc(s):cnHm(raw)}</td>`;
-    if(/시업|종업|시각|시간/.test(h) && !/휴게/.test(h)) return `<td class="tm">${cnHm(raw)}</td>`;
-    return `<td>${esc(s)}</td>`; };
+  const cellHTML=(row,c,i,rs,cs2)=>{ const h=H[i]||''; const raw=row[c]; const s=String(raw==null?'':raw).trim();
+    const sp=(rs>1?` rowspan="${rs}"`:'')+(cs2>1?` colspan="${cs2}"`:'');
+    const cls=(c===bc)?' class="bg2"' : (/휴게/.test(h)?' class="br"' : ((/시업|종업|시각|시간/.test(h))?' class="tm"':''));
+    if(c!==bc && /휴게/.test(h)) return `<td${sp}${cls}>${/~/.test(s)?esc(s):cnHm(raw)}</td>`;
+    if(c!==bc && /시업|종업|시각|시간/.test(h)) return `<td${sp}${cls}>${cnHm(raw)}</td>`;
+    return `<td${sp}${cls}>${esc(s)}</td>`; };
   let trs='';
   data.forEach((o,k)=>{ const row=o.cells;
-    let bg='';
-    if(eb){ if(k===0) bg=`<td rowspan="${data.length}" class="bg2">${esc(eb)}</td>`; }
-    else { const mg=mgAt(o.r);
-      if(mg && o.r!==mg.s.r){ bg=''; }
-      else { const bv=bc>=0?String(row[bc]==null?'':row[bc]).trim():'';
-        let span=1; if(mg){ span=0; for(let j=k;j<data.length&&data[j].r<=mg.e.r;j++) span++; }
-        bg=`<td${span>1?` rowspan="${span}"`:''} class="bg2">${esc(bv)}</td>`; }
+    /* 칸마다 엑셀 병합을 그대로 반영한다 —
+         병합 시작 칸이면 rowspan·colspan 을 주고, 그 병합에 덮인 칸은 아예 그리지 않는다.
+       근로자별 비고가 있으면 비고 열은 그 값 하나로 세로 전체를 덮는다(사람마다 다른 비고). */
+    let tds='';
+    for(let i=0;i<cols.length;i++){
+      const c=cols[i];
+      if(c===bc && eb){ if(k===0) tds+=`<td rowspan="${data.length}" class="bg2">${esc(eb)}</td>`; continue; }
+      const mg=mgAt(o.r,c);
+      if(mg){
+        if(o.r!==mg.s.r) continue;                       // 위 줄 병합에 덮인 칸
+        if(c!==mg.s.c && mg.s.c>=cols[0]) continue;      // 왼쪽 칸 병합에 덮인 칸
+      }
+      let rs=1, cs2=1;
+      if(mg){
+        rs=0; for(let j=k;j<data.length && data[j].r<=mg.e.r;j++) rs++;
+        cs2=0; for(const cc of cols) if(cc>=mg.s.c && cc<=mg.e.c) cs2++;
+      }
+      tds+=cellHTML(row,c,i,rs,cs2);
     }
-    /* 비고는 「맨 끝」이 아니라 제 열 자리에 넣는다 — 비고 뒤에 열이 더 있으면 값이 그쪽으로 밀린다.
-       위 줄에서 병합으로 덮인 칸이면 bg 가 빈 문자열이라 칸을 건너뛴다. */
-    const tds=cols.map((c,i)=> c===bc ? bg : cellHTML(row,c,i)).join('');
     trs+=`<tr>${tds}</tr>`;
   });
   /* 열 너비 — 비율 줄이 있으면 그대로, 없으면 비고 30% · 나머지 균등 */
