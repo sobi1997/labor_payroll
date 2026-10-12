@@ -2514,12 +2514,23 @@ function renderContracts(){
 
 /* =========================================================================
    근로계약서 — 파일명
-   파일명 규칙 : _사업장명_근로계약서_근로자이름   (전원 출력은 이름 자리에 «전원»)
+   개인 : 20260701_사업장명_신규근로계약서_이름
+          계약서_근로자별 「변경일」이 적혀 있으면  20260801_사업장명_변경근로계약서_이름
+          앞 날짜는 변경일 > 계약시작일 > 입사일 순(계약서 본문의 계약 시작일과 같은 날),
+          셋 다 날짜가 아니면 날짜 없이 사업장명_신규근로계약서_이름
+   전원 : 사업장명_근로계약서_전원   (통합·분할 같은 이름)
    ========================================================================= */
+function conYmd(v){ const f=String(fmtDate(v)||''); return /^\d{4}-\d{2}-\d{2}$/.test(f) ? f.replace(/-/g,'') : ''; }
 function conFileName(sabun){
   const co=state.company||'사업장';
-  const nm= sabun ? (empName(sabun)||sabun) : '전원';
-  return `_${co}_근로계약서_${nm}`.replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
+  const cut=v=>String(v).replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
+  if(!sabun) return cut(`${co}_근로계약서_전원`);
+  const sb=String(sabun).trim(), nm=empName(sb)||sb, p=(CDB.persons&&CDB.persons[sb])||{};
+  /* 변경계약 여부는 화면(변경 문구·«변경계약» 표시)과 같은 기준으로 본다 */
+  const chg=CDB.change?CDB.change[sb]:null, chgTxt=String(chg==null?'':chg).trim();
+  const isChg=chgTxt!=='' && chgTxt!=='-';
+  const ymd=(isChg?conYmd(chg):'') || conYmd(p.계약시작일) || conYmd(p.입사일);
+  return cut(`${ymd?ymd+'_':''}${co}_${isChg?'변경':'신규'}근로계약서_${nm}`);
 }
 
 /* Excel 저장 공통 — 모든 칸 글꼴을 맑은 고딕으로 맞춘 뒤 저장한다 (굵기·크기·색은 그대로).
@@ -2924,7 +2935,8 @@ async function exportPdfZip(kind, btn){
       used[nm]=1;
       files.push({name:nm+'.pdf', data:new Uint8Array(await (await make(g.pages, nm)).arrayBuffer())});
     }
-    pdfSave(makeZip(files), nameOf(null)+'(개인별 PDF).zip');
+    const sel=document.getElementById(kind==='all'?'empSel':'conSel');
+    pdfSave(makeZip(files), nameOf((sel&&sel.value)||null)+'.zip');   // 통합 PDF 와 같은 이름
   });
 }
 /* 급여총괄표 → 가로 A4 여러 장 — 크롬 인쇄와 같은 규칙으로 쪽을 나눈다
@@ -2961,7 +2973,8 @@ function cgPrintPages(host){
 async function exportPdfCg(btn){
   const box=document.getElementById('cgBox');
   if(!box || !box.querySelector('table.cg')){ alert('총괄표에 표시할 내용이 없습니다.'); return; }
-  const title=pdfClean(`${state.company||'급여'}_${curKindName()}총괄표 ${pdfYm()}`);
+  const ym=pdfYm();
+  const title=pdfClean(`${state.company||'급여'}_${curKindName()}총괄표${ym?`(${ym})`:''}`);
   await pdfRun(btn, async(make, say)=>{
     pdfSave(await make(null, title, (i,n)=>say(`PDF 만드는 중 ${i}/${n}장`),
       {geo:PDF_A4L, width:'287mm', prepare:cgPrintPages}), title+'.pdf');
@@ -3050,7 +3063,8 @@ function setupPrintPages(host){
 async function exportPdfSetup(btn){
   const box=document.getElementById('setupBox');
   if(!box || !box.querySelector('table')){ alert('근로조건 요약에 표시할 내용이 없습니다.'); return; }
-  const title=pdfClean(`${state.company||'급여'}_근로조건요약 ${pdfYm()}`);
+  const ym=pdfYm();
+  const title=pdfClean(`${state.company||'급여'}_근로조건요약${ym?`(${ym})`:''}`);
   await pdfRun(btn, async(make, say)=>{
     pdfSave(await make(null, title, (i,n)=>say(`PDF 만드는 중 ${i}/${n}장`),
       {geo:PDF_A4L, width:'287mm', prepare:setupPrintPages}), title+'.pdf');
@@ -3166,7 +3180,7 @@ function slipFileName(sabun){
     const lo=Math.min(state.slipFrom,state.slipTo), hi=Math.max(state.slipFrom,state.slipTo);
     kind='급여'; per = lo===hi ? ymT(lo) : `${ymT(lo)}~${ymT(hi)}`;
   }
-  return `${co}_${kind}명세서_${nm}_${per}`.replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
+  return `${co}_개인별${kind}명세서${per?`(${per})`:''}_${nm}`.replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
 }
 /* 급여명세서 Excel — 화면에 나온 명세서 한 장당 시트 하나 (기간별이면 시트 이름에 달·구분을 붙인다) */
 async function exportSlipsXlsx(){
@@ -3289,7 +3303,7 @@ function exportCgXlsx(){
     }
   }
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`${curKindName()}총괄표`);
-  xlsxSave(wb, `${(state.company||'급여').replace(/[^\w가-힣]/g,'')}_${curKindName()}총괄표_${y}-${String(m).padStart(2,'0')}.xlsx`);
+  xlsxSave(wb, pdfClean(`${state.company||'급여'}_${curKindName()}총괄표(${y}-${String(m).padStart(2,'0')})`)+'.xlsx');
 }
 
 /* =========================================================================
@@ -3613,7 +3627,7 @@ function exportSetupXlsx(){
   });
 
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'근로조건요약');
-  xlsxSave(wb, `${(state.company||'급여').replace(/[^\w가-힣]/g,'')}_근로조건요약_${ym||'설정'}.xlsx`);
+  xlsxSave(wb, pdfClean(`${state.company||'급여'}_근로조건요약${ym?`(${ym})`:''}`)+'.xlsx');
 }
 
 /* ================= 인쇄 ================= */
