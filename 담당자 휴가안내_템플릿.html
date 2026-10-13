@@ -125,15 +125,15 @@
                 <div class="field-row" style="margin-bottom: 0;">
                     <div class="input-group">
                         <label>시작일 <span class="req">*</span></label>
-                        <input type="date" id="startDate" class="input-text" onchange="renderMail()">
+                        <input type="text" id="startDate" class="input-text" inputmode="numeric" maxlength="10" placeholder="2026-09-01" autocomplete="off" oninput="formatDateInput(this); renderMail()">
                     </div>
                     <div class="input-group">
                         <label>종료일 <span class="req">*</span></label>
-                        <input type="date" id="endDate" class="input-text" onchange="renderMail()">
+                        <input type="text" id="endDate" class="input-text" inputmode="numeric" maxlength="10" placeholder="2026-09-05" autocomplete="off" oninput="formatDateInput(this); renderMail()">
                     </div>
                 </div>
-                <div id="startWarn" class="input-warn-msg">⚠️ 시작일을 선택해주세요.</div>
-                <div id="endWarn" class="input-warn-msg">⚠️ 종료일을 선택해주세요.</div>
+                <div id="startWarn" class="input-warn-msg">⚠️ 시작일을 입력해주세요. (예: 20260901 → 2026-09-01)</div>
+                <div id="endWarn" class="input-warn-msg">⚠️ 종료일을 입력해주세요. (예: 20260905 → 2026-09-05)</div>
                 <div style="font-size: 12px; color: #64748b; margin-top: 10px; line-height: 1.5;">
                     ※ 업무 복귀일은 종료일 다음날로 자동 계산되며, 주말(토·일)에 해당하면 다음 월요일로 표기됩니다.
                 </div>
@@ -216,6 +216,19 @@
         return `${year}년 ${month}월 ${dd}일 (${dayName})`;
     }
 
+    // 완전한 날짜(YYYY-MM-DD)인지 검사
+    function isFullDate(s) {
+        return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s).getTime());
+    }
+    // 날짜 자동 하이픈: 20260901 → 2026-09-01 (숫자만 받아 YYYY-MM-DD로)
+    function formatDateInput(el) {
+        const d = el.value.replace(/[^0-9]/g, '').slice(0, 8);
+        let out = d;
+        if (d.length > 6) out = d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6);
+        else if (d.length > 4) out = d.slice(0, 4) + '-' + d.slice(4);
+        el.value = out;
+    }
+
     function renderMail() {
         const name = document.getElementById('empName').value.trim();
         const title = document.getElementById('empTitle').value.trim();
@@ -226,8 +239,8 @@
         document.getElementById('nameWarn').style.display = name ? 'none' : 'block';
         document.getElementById('titleWarn').style.display = title ? 'none' : 'block';
         document.getElementById('reasonWarn').style.display = reason ? 'none' : 'block';
-        document.getElementById('startWarn').style.display = startRaw ? 'none' : 'block';
-        document.getElementById('endWarn').style.display = endRaw ? 'none' : 'block';
+        document.getElementById('startWarn').style.display = isFullDate(startRaw) ? 'none' : 'block';
+        document.getElementById('endWarn').style.display = isFullDate(endRaw) ? 'none' : 'block';
 
         const startFmt = formatDateWithDay(startRaw);
         const endFmt = formatDateWithDay(endRaw);
@@ -264,8 +277,8 @@
         if (!document.getElementById('empName').value.trim()) missing.push('담당자 이름');
         if (!document.getElementById('empTitle').value.trim()) missing.push('직급');
         if (!document.getElementById('reason').value.trim()) missing.push('사유');
-        if (!document.getElementById('startDate').value) missing.push('휴가 시작일');
-        if (!document.getElementById('endDate').value) missing.push('휴가 종료일');
+        if (!isFullDate(document.getElementById('startDate').value)) missing.push('휴가 시작일');
+        if (!isFullDate(document.getElementById('endDate').value)) missing.push('휴가 종료일');
         return missing;
     }
 
