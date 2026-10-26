@@ -1172,7 +1172,10 @@ function parseWorkbook(ab){
     if(sh['!ref']){ const rg=XLSX.utils.decode_range(sh['!ref']); rg.s.r=0; rg.s.c=0; opt.range=rg; }
     return XLSX.utils.sheet_to_json(sh,opt); };
   const getMg = nm => { const sh=wb.Sheets[nm]; return (sh&&sh['!merges'])?sh['!merges']:[]; };
-  try{ cnParse(getA1, wb.SheetNames||[], getMg); }
+  /* 계약서_세팅 글꼴(굵게·기울임·밑줄) — 글자색은 반영하지 않는다 */
+  const FMAP = cnFontMap(ab, wb.SheetNames||[]);
+  const getFx = nm => FMAP[nm]||null;
+  try{ cnParse(getA1, wb.SheetNames||[], getMg, getFx); }
   catch(err){ CDB.ready=false; console.error('근로계약서 시트 읽기 실패', err); }
 }
 
@@ -1888,8 +1891,117 @@ const CN_IS_TABLE=v=>/^도표\s*[12]?$/.test(String(v==null?'':v).trim());
 /* 빈 날짜 자리표시 — 실제 날짜(2025년 09월 13일)와 비슷한 폭 */
 const CN_DATEPH='<span class="dl" style="min-width:3em"></span>년 <span class="dl" style="min-width:1.9em"></span>월 <span class="dl" style="min-width:1.9em"></span>일';
 
+/* ──────────────────────────────────────────────────────────────
+   계약서_세팅 글꼴 반영 — 굵게 · 기울임 · 밑줄만 쓰고 글자색·크기는 쓰지 않는다.
+   SheetJS 는 cellStyles 로 셀 서식을 줄 때 채우기(배경)만 돌려주고 글꼴은 빼고 준다
+   → 원본 시트 XML 의 s="서식번호" 를 직접 읽어 styles.xml(CellXf → Fonts)로 잇는다.
+   비트 : 1=굵게 2=기울임 4=밑줄
+   ────────────────────────────────────────────────────────────── */
+const CN_FB=1, CN_FI=2, CN_FU=4;
+function cnWrap(h, fl){
+  if(!fl || h==null || h==='') return h;
+  let s=h;
+  if(fl&CN_FU) s='<u>'+s+'</u>';
+  if(fl&CN_FI) s='<i>'+s+'</i>';
+  if(fl&CN_FB) s='<b>'+s+'</b>';
+  return s;
+}
+/* 셀 안에서 일부만 서식을 준 경우(리치텍스트) → 조각마다 따로 감싼다. 없으면 null */
+function cnRich(t, f){
+  if(!f || !f.rt || !f.rt.length) return null;
+  const j=f.rt.map(x=>x.t).join('');
+  if(j.trim()!==String(t==null?'':t).trim()) return null;   // 값이 달라졌으면(치환·수식) 쓰지 않는다
+  if(!f.rt.some(x=>x.f)) return null;
+  return f.rt.map(x=>cnWrap(esc(x.t), x.f)).join('');
+}
+/* 세팅 셀 글자 → HTML */
+function cnFx(s, f){
+  const t=String(s==null?'':s);
+  if(t==='') return '';
+  const r=cnRich(t,f);
+  return r!=null ? r : cnWrap(esc(t), f?f.fl:0);
+}
+/* {fl,rt} 조회기 — 행·열은 엑셀 좌표(0기준). 계약서 엔진은 A1 기준으로 읽으므로 그대로 맞는다 */
+function cnFatOf(F){
+  if(!F) return ()=>null;
+  const fl=F.fl||{}, rt=F.rt||{};
+  return (r,c)=>{ const k=r+','+c, a=fl[k]|0, b=rt[k]||null; return (a||b)?{fl:a, rt:b}:null; };
+}
+const cnUnx = s => String(s).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
+  .replace(/&apos;/g,"'").replace(/&#(\d+);/g,(m,d)=>String.fromCharCode(+d)).replace(/&amp;/g,'&');
+const cnColNo = s => { let n=0; const t=String(s).toUpperCase(); for(let i=0;i<t.length;i++) n=n*26+(t.charCodeAt(i)-64); return n-1; };
+/* 공유문자열 조각 XML → [{t, f}] */
+function cnRunsOf(rx, cellFl){
+  if(!rx || !/<rPr/.test(rx)) return null;
+  const segs=[]; const re=/<r>([\s\S]*?)<\/r>/g; let m;
+  while((m=re.exec(rx))){
+    const body=m[1];
+    const pm=body.match(/<rPr>([\s\S]*?)<\/rPr>/);
+    const tm=body.match(/<t[^>]*>([\s\S]*?)<\/t>/);
+    if(!tm) continue;
+    let fl=cellFl|0;
+    if(pm){ const pr=pm[1]; fl=0;
+      if(/<b\s*\/>|<b[^>]*val="(?:1|true)"/.test(pr)) fl|=CN_FB;
+      if(/<i\s*\/>|<i[^>]*val="(?:1|true)"/.test(pr)) fl|=CN_FI;
+      if(/<u\s*\/>|<u[^>]*val="(?!none)[^"]*"/.test(pr)) fl|=CN_FU; }
+    segs.push({t:cnUnx(tm[1]), f:fl});
+  }
+  return segs.length?segs:null;
+}
+/* 엑셀 원본 → { 계약서_세팅N : {fl:{'행,열':비트}, rt:{'행,열':[조각]}} }
+   계약서_세팅 시트만 지정해 다시 읽으므로(0.2초 수준) 전체 파싱을 두 번 하지 않는다. */
+function cnFontMap(ab, names){
+  const M={};
+  const want=(names||[]).filter(n=>/^계약서_세팅\d+$/.test(String(n)));
+  if(!want.length) return M;
+  let wb2;
+  try{ wb2=XLSX.read(ab,{type:'array', sheets:want, bookFiles:true, cellStyles:true}); }
+  catch(e){ console.warn('계약서_세팅 글꼴을 읽지 못해 서식 없이 출력합니다.', e); return M; }
+  const files=wb2.files, St=wb2.Styles;
+  if(!files || !St || !St.CellXf || !St.Fonts) return M;
+  const dec=u=> typeof u==='string' ? u : new TextDecoder('utf-8').decode(u);
+  const text=p=>{ const f=files[p]; return (f&&f.content)?dec(f.content):null; };
+  const wbx=text('xl/workbook.xml'), rel=text('xl/_rels/workbook.xml.rels');
+  if(!wbx||!rel) return M;
+  const rmap={}; let m;
+  const rre=/<Relationship\b[^>]*?Id="([^"]+)"[^>]*?Target="([^"]+)"/g;
+  while((m=rre.exec(rel))) rmap[m[1]]=m[2];
+  const path={};
+  const sre=/<sheet\b[^>]*?>/g;
+  while((m=sre.exec(wbx))){
+    const nm=(m[0].match(/name="([^"]*)"/)||[])[1];
+    const id=(m[0].match(/r:id="([^"]*)"/)||[])[1];
+    if(nm==null||id==null||!rmap[id]) continue;
+    path[cnUnx(nm)]='xl/'+String(rmap[id]).replace(/^\/?xl\//,'').replace(/^\//,'');
+  }
+  const cache={};
+  const flagOf=si=>{ if(cache[si]!=null) return cache[si];
+    let fl=0; const x=St.CellXf[si|0], f=x?St.Fonts[x.fontId|0]:null;
+    if(f){ if(f.bold) fl|=CN_FB; if(f.italic) fl|=CN_FI; if(f.underline) fl|=CN_FU; }
+    return (cache[si]=fl); };
+  want.forEach(nm=>{
+    const xml=path[nm]?text(path[nm]):null; if(!xml) return;
+    const fl={}; const cre=/<c r="([A-Z]+)(\d+)"([^>]*)>/g; let k;
+    while((k=cre.exec(xml))){
+      const si=(k[3].match(/\ss="(\d+)"/)||[])[1]; if(si==null) continue;
+      const v=flagOf(+si); if(!v) continue;
+      fl[(+k[2]-1)+','+cnColNo(k[1])]=v;
+    }
+    const rt={}; const sh=wb2.Sheets[nm];
+    if(sh) for(const ref in sh){ if(ref.charAt(0)==='!') continue;
+      const c=sh[ref]; if(!c||!c.r||!/<rPr/.test(c.r)) continue;
+      let a; try{ a=XLSX.utils.decode_cell(ref); }catch(e){ continue; }
+      const segs=cnRunsOf(c.r, fl[a.r+','+a.c]|0);
+      if(segs) rt[a.r+','+a.c]=segs;
+    }
+    M[nm]={fl, rt};
+  });
+  return M;
+}
+
 /* 계약서_세팅 시트 하나 파싱 → {spec(조항), pyo1(임금세부), pyo2(근로시간)} */
-function cnParseSet(cs, merges){
+function cnParseSet(cs, merges, F){
+  const FAT=cnFatOf(F);
   let hr=-1; for(let r=0;r<Math.min(cs.length,8);r++){ if((cs[r]||[]).some(x=>String(x==null?'':x).trim()==='구분')){hr=r;break;} }
   const hrow=(hr>=0?cs[hr]:[])||[];
   const idx=n=>hrow.findIndex(x=>String(x==null?'':x).trim()===n);
@@ -1898,8 +2010,8 @@ function cnParseSet(cs, merges){
   const secs=[]; let cur=null, lastB='';
   for(let r=(hr>=0?hr+1:0);r<cs.length;r++){ const row=cs[r]||[];
     const b=String(row[bi]==null?'':row[bi]).trim(); const c=row[ci], d=row[di];
-    if(b){ if(b!==lastB){ cur={title:b, lines:[]}; secs.push(cur); lastB=b; } }
-    if(cur) cur.lines.push({c, d}); }
+    if(b){ if(b!==lastB){ cur={title:b, lines:[], tf:FAT(r,bi)}; secs.push(cur); lastB=b; } }
+    if(cur) cur.lines.push({c, d, f:FAT(r,di)}); }
   const spec=secs;
   /* 도표2 셀 위치를 먼저 찾아 둔다 — 43차처럼 도표1·도표2가 같은 줄에 나란히 있으면
      도표1 비고는 도표2 열 앞까지만 읽어야 섞이지 않는다. */
@@ -1917,11 +2029,14 @@ function cnParseSet(cs, merges){
       const tplEnd = (p2c>c0) ? p2c : Infinity;
       for(let r=r0+1;r<cs.length;r++){ const row=cs[r]||[];
         const I=String(row[c0]==null?'':row[c0]).trim();
-        const J=row.slice(c0+1, Math.min(tplEnd, row.length)).map(x=>x==null?'':String(x)).join('').trim();
+        const end=Math.min(tplEnd, row.length);
+        const J=row.slice(c0+1, end).map(x=>x==null?'':String(x)).join('').trim();
+        /* 비고 템플릿은 여러 칸에 나뉘어 있다 → 칸마다 글꼴을 따로 들고 간다 */
+        const segs=[]; for(let c=c0+1;c<end;c++){ const sv=row[c]==null?'':String(row[c]); if(sv!=='') segs.push({t:sv, f:FAT(r,c)}); }
         if(I==='도표2') break;
-        if(I==='구분'){ hdr={구분:'구분', 비고:J||'비고'}; continue; }
+        if(I==='구분'){ hdr={구분:'구분', 비고:J||'비고', bf:(segs[0]&&segs[0].f)||null}; continue; }
         if(I===''){ if(items.length) break; else continue; }
-        items.push({구분:I, tpl:J}); }
+        items.push({구분:I, tpl:J, segs}); }
       if(items.length) pyo1={ hdr:hdr||{구분:'구분',비고:'비고'}, items }; } }
   /* 도표2 : '도표2' 셀 → A/B/C 블록 */
   let pyo2=null;
@@ -1937,17 +2052,22 @@ function cnParseSet(cs, merges){
         if(/^도표/.test(m)) break;
         if(curr) blocks[curr].push({r, cells:row}); }   // r=절대행(A1기준)
       /* 세팅 비고(B용) : 도표2 블록에서 '비고' 라벨 우측 내용 */
-      let sbg='';
+      let sbg='', sbgF=null;
       ['A','B','C'].forEach(k=>{ if(sbg) return; blocks[k].forEach(o=>{ if(sbg) return; const row=o.cells;
         for(let c=c0;c<row.length;c++){ if(String(row[c]==null?'':row[c]).trim()==='비고'){
-          const rest=row.slice(c+1).map(x=>String(x==null?'':x).trim()).filter(Boolean);
-          if(rest.length){ sbg=rest.join(' / '); } break; } } }); });
-      pyo2={ ci:c0, A:blocks.A, B:blocks.B, C:blocks.C, bigo:sbg, merges:merges||[] }; } }
+          const rest=[], fs=[];
+          for(let c2=c+1;c2<row.length;c2++){ const v=String(row[c2]==null?'':row[c2]).trim(); if(v){ rest.push(v); fs.push(FAT(o.r,c2)); } }
+          if(rest.length){ sbg=rest.join(' / ');
+            /* 여러 칸을 ' / ' 로 이어 붙이므로 모든 칸에 공통으로 걸린 글꼴만 반영한다 */
+            let fl=0xFF; fs.forEach(x=>{ fl &= (x?x.fl:0); });
+            sbgF = fl ? {fl} : null; }
+          break; } } }); });
+      pyo2={ ci:c0, A:blocks.A, B:blocks.B, C:blocks.C, bigo:sbg, bigoF:sbgF, merges:merges||[], F:F||null }; } }
   return { spec, pyo1, pyo2 };
 }
 
 /* 엑셀 → CDB. parseWorkbook 안에서 A1 기준 접근자로 부른다. */
-function cnParse(get, names, getM){
+function cnParse(get, names, getM, getF){
   const base=get('노무관리기초정보')||[];
   const flat=[]; base.forEach((row,r)=>(row||[]).forEach((c,ci)=>{ if(c!=null&&c!=='') flat.push({r,ci,v:String(c).trim()}); }));
   const rightOf=lab=>{ const f=flat.find(x=>x.v===lab); if(!f) return ''; const v=base[f.r]&&base[f.r][f.ci+1]; return v==null?'':String(v).trim(); };
@@ -1992,7 +2112,7 @@ function cnParse(get, names, getM){
   /* 계약서_세팅N 시트들 → CDB.sets[N] */
   CDB.sets={};
   (names||[]).forEach(nm=>{ const m=String(nm).match(/^계약서_세팅(\d+)$/); if(!m) return;
-    const cs=get(nm); if(cs) CDB.sets[+m[1]]=cnParseSet(cs, getM?getM(nm):[]); });
+    const cs=get(nm); if(cs) CDB.sets[+m[1]]=cnParseSet(cs, getM?getM(nm):[], getF?getF(nm):null); });
   CDB.setKeys=Object.keys(CDB.sets).map(Number).sort((a,b)=>a-b);
   const def=CDB.setKeys.length?CDB.sets[CDB.setKeys[0]]:{spec:null,pyo1:null,pyo2:null};
   CDB.spec=def.spec; CDB.pyo1=def.pyo1; CDB.pyo2=def.pyo2;
@@ -2027,33 +2147,42 @@ function cnPyoRows(){
 }
 /* 비고 OO 출처(근로시간) : 기본급=AN(39) 포괄연장=AP(41) 포괄야간=AQ(42) 포괄휴일=AU(46) 연차=AY(50) */
 const CN_PYO_BIGO_COL={ '기본급':39, '포괄연장수당':41, '포괄야간수당':42, '포괄휴일수당':46 };
-function cnPyoBigo(bg, tpl, t){
+function cnPyoBigo(bg, it, t){
   const B=CDB.timeBase||0;
+  /* 비고 문구는 칸마다 쪼개져 있다 — 칸별 글꼴을 살리려고 조각 단위로 만든다 */
+  const segs=(it&&it.segs&&it.segs.length) ? it.segs : [{t:(it&&it.tpl)||'', f:null}];
+  const f0=segs.find(s=>String(s.t).trim()) || segs[0];
   /* 연차수당 비고 (42차 계약서_세팅 기준) : 근로시간 AY 「소정근로」 → 통상임금 1일분 / 「-」·빈칸 → 공백 */
   if(bg==='연차수당'){ const g=String(t[50+B]==null?'':t[50+B]).trim();
-    return /소정/.test(g) ? '통상임금 1일분' : ''; }
+    return /소정/.test(g) ? cnWrap('통상임금 1일분', (f0&&f0.f)?f0.f.fl:0) : ''; }
   /* 근로시간(소정근로·포괄연장·포괄야간·포괄휴일)은 엑셀 표기와 같이 소수점 첫째 자리까지 */
   const hrs=n=>(Math.round(n*10)/10).toLocaleString('ko-KR',{minimumFractionDigits:1,maximumFractionDigits:1});
   const hv=i=>{ const s=String(t[i+B]==null?'':t[i+B]).trim(); if(s===''||s==='-') return '0.0'; const n=parseFloat(s.replace(/,/g,'')); return isNaN(n)?esc(s):hrs(n); };
-  if(CN_PYO_BIGO_COL[bg]!=null) return (tpl||'').replace('OO', hv(CN_PYO_BIGO_COL[bg]));
-  return esc((tpl||'').replace('OO',''));
+  const col=CN_PYO_BIGO_COL[bg];
+  const last=segs.length-1; let done=false;
+  return segs.map((s,k)=>{ let x=String(s.t==null?'':s.t);
+    if(k===0) x=x.replace(/^\s+/,'');
+    if(k===last) x=x.replace(/\s+$/,'');
+    if(!done && x.indexOf('OO')>=0){ x=x.replace('OO', col!=null?hv(col):''); done=true; }
+    return cnWrap(col!=null?x:esc(x), s.f?s.f.fl:0); }).join('');
 }
 function cnPyo1HTML(sb){
   const w=CDB.wage[sb]; if(!w||!w.row) return null;
   const t=CDB.time[sb]||[];
-  const tplOf=bg=>{ const it=CDB.pyo1?CDB.pyo1.items.find(x=>x.구분===bg):null; return it?it.tpl:''; };
+  const itOf=bg=>(CDB.pyo1?CDB.pyo1.items.find(x=>x.구분===bg):null)||null;
   const sub=CDB.wageSub||[];
   let trs='';
   cnPyoRows().forEach(r=>{ const v=num(w.row[r.i]); if(!(v>0)) return;   // 0/빈값이면 숨김
     let nm=r.nm;
     if(r.slot){ const s=String(sub[r.i]==null?'':sub[r.i]).trim(); if(s) nm=s; }
-    const bigo = r.bg ? cnPyoBigo(r.bg, tplOf(r.bg), t) : '';
+    const bigo = r.bg ? cnPyoBigo(r.bg, itOf(r.bg), t) : '';
     trs += `<tr><td>${esc(nm)}</td><td class="amt">${won(v)}</td><td class="bg">${bigo}</td></tr>`;
   });
   if(!trs) return null;
   const hb=CDB.pyo1&&CDB.pyo1.hdr?CDB.pyo1.hdr.비고:'비고';
+  const hbf=CDB.pyo1&&CDB.pyo1.hdr?CDB.pyo1.hdr.bf:null;
   return `<table class="pyo"><tbody>`
-    +`<tr><th style="width:26%">구분</th><th style="width:24%">금액(원)</th><th>${esc(hb)}</th></tr>`
+    +`<tr><th style="width:26%">구분</th><th style="width:24%">금액(원)</th><th>${cnFx(hb,hbf)}</th></tr>`
     +trs+`</tbody></table>`;
 }
 
@@ -2065,13 +2194,15 @@ function cnHm(v){ if(v==null||v==='') return ''; const z=x=>String(x).padStart(2
 
 /* 도표2 정적표(A/C) — 칸 수는 세팅 시트 머리글에 실제로 적힌 만큼 (5칸이면 5칸, 6칸으로 늘리면 6칸).
    머리글 이름으로 칸 성격을 정한다 : 시업/종업 = 시각, 휴게 = 「시작 ~ 종료」, 비고 = 병합·근로자별 비고 */
-function cnPyo2Static(blk, ci, empBigo, merges){
+function cnPyo2Static(blk, ci, empBigo, merges, F){
+  const FAT=cnFatOf(F);
   if(!blk||!blk.length) return null;
   let hi=blk.findIndex(o=>String(o.cells[ci]==null?'':o.cells[ci]).trim()==='구분'); if(hi<0) return null;
   const hd=blk[hi].cells;
   let lastC=ci; for(let c=ci;c<hd.length;c++){ if(String(hd[c]==null?'':hd[c]).trim()) lastC=c; }
   const cols=[]; for(let c=ci;c<=lastC;c++) cols.push(c);
   const H=cols.map(c=>String(hd[c]==null?'':hd[c]).trim());
+  const HF=cols.map(c=>FAT(blk[hi].r, c));
   /* 머리글(구분) 바로 위의 숫자 줄 = 칸 너비 비율(100 기준). 예: 15 15 15 25 30
      값이 없는 칸은 남은 비율을 나눠 갖는다. 비율 줄이 없으면 예전처럼 비고 30% · 나머지 균등. */
   let ratio=null;
@@ -2096,12 +2227,13 @@ function cnPyo2Static(blk, ci, empBigo, merges){
     data.push(o); }
   if(!data.length) return null;
   const eb=(empBigo&&String(empBigo).trim()&&String(empBigo).trim()!=='-')?String(empBigo).trim():'';
-  const cellHTML=(row,c,i,rs,cs2)=>{ const h=H[i]||''; const raw=row[c]; const s=String(raw==null?'':raw).trim();
+  const cellHTML=(row,c,i,rs,cs2,absR)=>{ const h=H[i]||''; const raw=row[c]; const s=String(raw==null?'':raw).trim();
     const sp=(rs>1?` rowspan="${rs}"`:'')+(cs2>1?` colspan="${cs2}"`:'');
     const cls=(c===bc)?' class="bg2"' : (/휴게/.test(h)?' class="br"' : ((/시업|종업|시각|시간/.test(h))?' class="tm"':''));
-    if(c!==bc && /휴게/.test(h)) return `<td${sp}${cls}>${/~/.test(s)?esc(s):cnHm(raw)}</td>`;
-    if(c!==bc && /시업|종업|시각|시간/.test(h)) return `<td${sp}${cls}>${cnHm(raw)}</td>`;
-    return `<td${sp}${cls}>${esc(s)}</td>`; };
+    const fx=FAT(absR,c), fl=fx?fx.fl:0;
+    if(c!==bc && /휴게/.test(h)) return `<td${sp}${cls}>${/~/.test(s)?cnFx(s,fx):cnWrap(cnHm(raw),fl)}</td>`;
+    if(c!==bc && /시업|종업|시각|시간/.test(h)) return `<td${sp}${cls}>${cnWrap(cnHm(raw),fl)}</td>`;
+    return `<td${sp}${cls}>${cnFx(s,fx)}</td>`; };
   let trs='';
   data.forEach((o,k)=>{ const row=o.cells;
     /* 칸마다 엑셀 병합을 그대로 반영한다 —
@@ -2121,7 +2253,7 @@ function cnPyo2Static(blk, ci, empBigo, merges){
         rs=0; for(let j=k;j<data.length && data[j].r<=mg.e.r;j++) rs++;
         cs2=0; for(const cc of cols) if(cc>=mg.s.c && cc<=mg.e.c) cs2++;
       }
-      tds+=cellHTML(row,c,i,rs,cs2);
+      tds+=cellHTML(row,c,i,rs,cs2,o.r);
     }
     trs+=`<tr>${tds}</tr>`;
   });
@@ -2141,7 +2273,7 @@ function cnPyo2Static(blk, ci, empBigo, merges){
     cg='<colgroup>'+cols.map(c=> c===bc ? '<col style="width:30%">' : `<col style="width:${rest}%">`).join('')+'</colgroup>';
   }
   return `<table class="pyo pyo2 s5">${cg}`
-    +`<tbody><tr>${H.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>${trs}</tbody></table>`;
+    +`<tbody><tr>${H.map((h,i)=>`<th>${cnFx(h,HF[i])}</th>`).join('')}</tr>${trs}</tbody></table>`;
 }
 
 /* 도표2 B : 근로시간 시트에서 요일별 시업/종업/휴게 (전치표) */
@@ -2192,15 +2324,17 @@ function cnPyo2HTML(sb){
   const bigo = eb || (CDB.pyo2.bigo||'');
   if(f==='B'){
     let tbl=cnPyo2B(sb); if(!tbl) return null;
-    const bigoRow=`<tr><td>비고</td><td colspan="7" class="bg2">${esc(bigo)}</td></tr>`;
+    /* 세팅 비고를 쓸 때만 세팅 글꼴을 반영한다(근로자별 비고는 계약서_근로자별 시트 값) */
+    const bf = eb ? null : (CDB.pyo2.bigoF||null);
+    const bigoRow=`<tr><td>비고</td><td colspan="7" class="bg2">${cnWrap(esc(bigo), bf?bf.fl:0)}</td></tr>`;
     return tbl.replace('</tbody>', bigoRow+'</tbody>');
   }
   if(f==='C'){
     const sec=cnPickCSection(CDB.pyo2.C, CDB.pyo2.ci, sb);
     if(!sec) return null;
-    return cnPyo2Static(sec, CDB.pyo2.ci, eb, CDB.pyo2.merges);
+    return cnPyo2Static(sec, CDB.pyo2.ci, eb, CDB.pyo2.merges, CDB.pyo2.F);
   }
-  return cnPyo2Static(CDB.pyo2.A, CDB.pyo2.ci, eb, CDB.pyo2.merges);
+  return cnPyo2Static(CDB.pyo2.A, CDB.pyo2.ci, eb, CDB.pyo2.merges, CDB.pyo2.F);
 }
 
 /* 조건(C)+내용(D) → 계약서 문구. null이면 그 줄 제외.
@@ -2208,7 +2342,9 @@ function cnPyo2HTML(sb){
      이때 D(내용)는 명령을 설명해 둔 메모라서 출력하지 않는다.
      (예: 도표1 → '우측참조', 수식1 → '인적정보 E열 업무내용 매치', 세전 → '… 월 OO원 …')
    C가 비었거나 '-' 이면 D를 그대로 쓴다. */
-function cnLineHTML(c, d, ctx){
+function cnLineHTML(c, d, ctx, f){
+  const fl=f?f.fl:0;
+  const W=h=>(h==null||h==='')?h:cnWrap(h, fl);
   const C=String(c==null?'':c).trim();
   const D=String(d==null?'':d).trim();
   const 세후=(ctx.급여구분==='세후');
@@ -2217,8 +2353,8 @@ function cnLineHTML(c, d, ctx){
     if(C==='도표1') return num(ctx.시급)>0 ? null : cnPyo1HTML(ctx.사번);
     if(C==='도표2') return cnPyo2HTML(ctx.사번);
     if(CN_IS_TABLE(C)) return null;
-    if(C==='수식1') return esc(ctx.업무);
-    if(C==='수식2') return `1. 근로계약기간은 ${ctx.시작} 부터 ${ctx.종료문}.`;
+    if(C==='수식1') return W(esc(ctx.업무));
+    if(C==='수식2') return W(`1. 근로계약기간은 ${ctx.시작} 부터 ${ctx.종료문}.`);
     /* 임금 명령값 — 47차~ 조건 이름 : 세전/월급 · 세전/시급 · 세전/연봉/월급 · 세후1/월급 · 세후2/월급
        (46차 이전의 「세전 · 세후1 · 세후2」도 그대로 받는다)
          · 세전/연봉/월급 : 임금설정 D=세전 이고 연봉에 값이 있을 때. 문구의 OO 두 개 = 연봉 · 월급
@@ -2227,8 +2363,8 @@ function cnLineHTML(c, d, ctx){
        문구는 내용(D)에 적어 둔 대로 쓰고 OO 자리에 금액을 앞에서부터 채운다(D가 비면 기본 문구). */
     const key=C.replace(/\s+/g,'');
     const 연봉=num(ctx.연봉), 월급=num(ctx.급여액), 시급=num(ctx.시급);
-    const OO=(tpl,vals,dflt)=>{ const t=String(tpl||''); if(!/OO/.test(t)) return dflt||null;
-      let i=0; return esc(t).replace(/OO/g, ()=>`<b>${won(vals[Math.min(i++, vals.length-1)])}</b>`); };
+    const OO=(tpl,vals,dflt)=>{ const t=String(tpl||''); if(!/OO/.test(t)) return W(dflt||null);
+      let i=0; return W(esc(t).replace(/OO/g, ()=>`<b>${won(vals[Math.min(i++, vals.length-1)])}</b>`)); };
     if(key==='세전/연봉/월급') return (!세후 && 연봉>0)
       ? OO(D, [연봉, 월급], `1. “乙”의 급여는 연봉 <b>${won(연봉)}</b>원(월 <b>${won(월급)}</b>원)으로 하며, 세부사항은 아래와 같다.`) : null;
     if(key==='세전/월급' || key==='세전') return (!세후 && 월급>0 && !(연봉>0))
@@ -2240,10 +2376,10 @@ function cnLineHTML(c, d, ctx){
     if(key==='세후1' || key==='세후1/월급') return (세후 && 월급>0)
       ? OO(D, [월급], `1. “乙”의 세금 공제 후 월급은 <b>${won(월급)}</b>원으로 한다.`) : null;
     if(key==='세후2' || key==='세후2/월급') return 세후
-      ? (D ? esc(D) : `세전금액은 아래와 같으며, 공제금액 변동에 따라 세전금액은 변동될 수 있다. 단, 변동된 내용은 급여자료에 따른다.`) : null;
+      ? (D ? cnFx(D, f) : W(`세전금액은 아래와 같으며, 공제금액 변동에 따라 세전금액은 변동될 수 있다. 단, 변동된 내용은 급여자료에 따른다.`)) : null;
     /* 모르는 명령이면 내용(D)을 그대로 보여 준다 — 새 명령이 생기면 화면에서 바로 눈에 띄게 */
   }
-  return D ? esc(D) : null;
+  return D ? cnFx(D, f) : null;
 }
 
 /* ── 시범적 근로계약(수습·시용·인턴) : 인적정보 K:M = [구분][개월][%] ── */
@@ -2305,27 +2441,28 @@ function cnContractHTML(sb){
     : (cnIsDateVal(p.계약종료일) ? `${cnKrDate(p.계약종료일)}까지로 한다` : esc(jv));
   const 입사표시 = clean(p.입사일) ? cnKrDate(p.입사일) : CN_DATEPH;
   const ctx={ 사번:sb, 시작, 종료문, 입사표시,
-    급여액:w.급여액||0, 시급:w.시급||0, 연봉:w.연봉||0, 급여구분:w.구분||'', 업무:(업무내용&&업무내용!=='-')?업무내용:'-', 변경일 };
+    급여액:w.급여액||0, 시급:w.시급||0, 연봉:w.연봉||0, 급여구분:w.구분||'', 업무:(업무내용&&업무내용!=='-')?업무내용:'', 변경일 };   // 비면 「-」 없이 빈칸
 
   let body='';
   if(CDB.spec){
     const FIXED_WORK='“甲”의 사정에 따라 근로장소 또는 업무를 변경할 수 있으며,<br>“乙”은 정당한 사유없이 이를 거부할 수 없다.';
     const itemsOf=sec=>{ const items=[];
       sec.lines.forEach(ln=>{
-        if(/^▶/.test(String(ln.d||'').trim())){ items.push(`<div class="agreeln">${esc(ln.d)}<span class="sig">동의자 : ${esc(p.성명||'')} (서명 또는 인)</span></div>`); return; }
-        const h=cnLineHTML(ln.c, ln.d, ctx);
+        if(/^▶/.test(String(ln.d||'').trim())){ items.push(`<div class="agreeln">${cnFx(ln.d, ln.f)}<span class="sig">동의자 : ${esc(p.성명||'')} (서명 또는 인)</span></div>`); return; }
+        const h=cnLineHTML(ln.c, ln.d, ctx, ln.f);
         if(h!=null && h!=='') items.push(`<div class="cl">${h}</div>`);
       });
       return items; };
     body = CDB.spec.map(sec=>{
       const t=sec.title;
-      if(/근로\s*장소/.test(t)) return `<tr><td class="lbl">근로장소</td><td class="cnt" style="text-align:center">${itemsOf(sec).join('')}</td><td class="cnt" colspan="2" rowspan="3" style="text-align:center">${FIXED_WORK}</td></tr>`;
-      if(/업무\s*내용/.test(t)) return `<tr><td class="lbl">업무내용</td><td class="cnt" style="text-align:center">${itemsOf(sec).join('')}</td></tr>`
+      const tf=sec.tf?sec.tf.fl:0;     // 조항 이름(구분 칸) 글꼴
+      if(/근로\s*장소/.test(t)) return `<tr><td class="lbl">${cnWrap('근로장소',tf)}</td><td class="cnt" style="text-align:center">${itemsOf(sec).join('')}</td><td class="cnt" colspan="2" rowspan="3" style="text-align:center">${FIXED_WORK}</td></tr>`;
+      if(/업무\s*내용/.test(t)) return `<tr><td class="lbl">${cnWrap('업무내용',tf)}</td><td class="cnt" style="text-align:center">${itemsOf(sec).join('')}</td></tr>`
         +`<tr><td class="lbl">입사일</td><td class="cnt" style="text-align:center">${ctx.입사표시}</td></tr>`;
-      if(/계약\s*기간/.test(t)) return `<tr><td class="lbl">계약기간</td><td class="cnt" colspan="3">${itemsOf(sec).join('')}</td></tr>`+cnSuRowHTML(p);
+      if(/계약\s*기간/.test(t)) return `<tr><td class="lbl">${cnWrap('계약기간',tf)}</td><td class="cnt" colspan="3">${itemsOf(sec).join('')}</td></tr>`+cnSuRowHTML(p);
       const items=itemsOf(sec);
       if(!items.length) return '';   // 내용 전부 빈 섹션(고용승계 등) 제외
-      return `<tr><td class="lbl">${cnLabelHTML(t)}</td><td class="cnt" colspan="3">${items.join('')}</td></tr>`;
+      return `<tr><td class="lbl">${cnWrap(cnLabelHTML(t),tf)}</td><td class="cnt" colspan="3">${items.join('')}</td></tr>`;
     }).join('');
   }
 
